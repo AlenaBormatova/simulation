@@ -56,7 +56,16 @@ public final class Predator extends Creature {
                 map::isAdjacentToAliveHerbivore8
         );
 
-        if (path == null || path.size() <= 1) return;
+        // Если путь недоступен (или мы уже "на месте"), не стоим на месте:
+        // делаем свободный случайный шаг, иначе волк просто умирает от метаболизма
+        if (path == null || path.size() <= 1) {
+            List<Coordinates> free = map.freeNeighbors8(getPosition());
+            if (!free.isEmpty()) {
+                Coordinates next = free.get(random.nextInt(free.size()));
+                map.moveEntity(this, next);
+            }
+            return;
+        }
 
         // 3) Двигаемся
         int steps = Math.min(speed, path.size() - 1);
@@ -65,7 +74,8 @@ public final class Predator extends Creature {
     }
 
 
-    @Override public String getGlyph() {
+    @Override
+    public String getGlyph() {
         return "\uD83D\uDC3A";
     }
 }
