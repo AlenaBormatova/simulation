@@ -11,6 +11,10 @@ public final class Herbivore extends Creature {
     private static final int METABOLISM_PER_TURN = 1;
     private static final int HEAL_FROM_GRASS = 8;
 
+    private static final double REPRODUCTION_HP_RATIO = 0.92;
+    private static final int REPRODUCTION_HP_COST = 16;
+    private static final double REPRODUCTION_CHANCE = 0.08;
+
     private final int maxHp;
 
     public Herbivore(Coordinates position, int hp, int speed) {
@@ -40,7 +44,8 @@ public final class Herbivore extends Creature {
         Grass adjacent = map.findAdjacentGrass8(getPosition());
         if (adjacent != null) {
             map.remove(adjacent.getPosition());
-            setHp(getHp() + HEAL_FROM_GRASS);;
+            setHp(getHp() + HEAL_FROM_GRASS);
+            tryReproduce(map, random);
             return;
         }
 
@@ -63,6 +68,25 @@ public final class Herbivore extends Creature {
         if (!free.isEmpty()) {
             Coordinates next = free.get(random.nextInt(free.size()));
             map.moveEntity(this, next);
+        }
+    }
+
+    private void tryReproduce(WorldMap map, Random random) {
+        if (hp < Math.ceil(maxHp * REPRODUCTION_HP_RATIO)
+                || hp <= REPRODUCTION_HP_COST
+                || random.nextDouble() >= REPRODUCTION_CHANCE) {
+            return;
+        }
+
+        List<Coordinates> freeNeighborPositions = map.freeNeighbors8(getPosition());
+        if (freeNeighborPositions.isEmpty()) {
+            return;
+        }
+
+        Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
+        Herbivore child = new Herbivore(childPosition, maxHp, maxHp, speed);
+        if (map.place(child)) {
+            setHp(getHp() - REPRODUCTION_HP_COST);
         }
     }
 

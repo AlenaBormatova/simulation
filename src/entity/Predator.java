@@ -11,6 +11,10 @@ public final class Predator extends Creature {
     private static final int METABOLISM_PER_TURN = 2;
     private static final int HEAL_ON_KILL = 18;
 
+    private static final double REPRODUCTION_HP_RATIO = 0.72;
+    private static final int REPRODUCTION_HP_COST = 12;
+    private static final double REPRODUCTION_CHANCE = 0.30;
+
     private final int attack;
     private final int maxHp;
 
@@ -45,6 +49,7 @@ public final class Predator extends Creature {
             if (!adjacent.isAlive()) {
                 map.remove(adjacent.getPosition());
                 setHp(getHp() + HEAL_ON_KILL);
+                tryReproduce(map, random);
             }
             return;
         }
@@ -73,6 +78,24 @@ public final class Predator extends Creature {
         map.moveEntity(this, newPos);
     }
 
+    private void tryReproduce(WorldMap map, Random random) {
+        if (hp < Math.ceil(maxHp * REPRODUCTION_HP_RATIO)
+                || hp <= REPRODUCTION_HP_COST
+                || random.nextDouble() >= REPRODUCTION_CHANCE) {
+            return;
+        }
+
+        List<Coordinates> freeNeighborPositions = map.freeNeighbors8(getPosition());
+        if (freeNeighborPositions.isEmpty()) {
+            return;
+        }
+
+        Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
+        Predator child = new Predator(childPosition, maxHp, speed, attack);
+        if (map.place(child)) {
+            setHp(getHp() - REPRODUCTION_HP_COST);
+        }
+    }
 
     @Override
     public String getGlyph() {

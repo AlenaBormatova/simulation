@@ -1,9 +1,6 @@
 package actions;
 
-import entity.Coordinates;
-import entity.Entity;
-import entity.Grass;
-import entity.Herbivore;
+import entity.*;
 import world.WorldMap;
 
 import java.util.Random;
@@ -15,7 +12,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
 
     // ===== Трава =====
     private static final int MIN_GRASS_FLOOR = 1;
-    private static final int GRASS_SPAWN_CAP_PER_TURN = 40;
+    private static final int GRASS_SPAWN_CAP_PER_TURN = 45;
 
     // minGrass = max(1, area / divisor, herbivores)
     private static final int GRASS_MIN_BY_AREA_DIVISOR = 15;
@@ -33,10 +30,16 @@ public final class EnsureMinimumSpawnsAction implements Action {
     private static final int HERBIVORE_SPAWN_HP = 18;
     private static final int HERBIVORE_SPAWN_SPEED = 2;
 
+    private static final int PREDATORS_SPAWN_CAP_PER_TURN = 2;
+    private static final int PREDATOR_SPAWN_HP = 40;
+    private static final int PREDATOR_SPAWN_SPEED = 1;
+    private static final int PREDATOR_SPAWN_ATTACK = 8;
+
     @Override
     public void execute(WorldMap map, Random random, int turn) {
         ensureGrass(map, random);
         ensureHerbivores(map, random);
+        ensurePredators(map, random);
     }
 
     private void ensureGrass(WorldMap map, Random random) {
@@ -63,10 +66,16 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     private void ensureHerbivores(WorldMap map, Random random) {
+        int area = map.getWidth() * map.getHeight();
         int currentHerbivoreCount = map.countAliveHerbivores();
-        if (currentHerbivoreCount >= HERBIVORES_MIN_COUNT) return;
+        //if (currentHerbivoreCount >= HERBIVORES_MIN_COUNT) return;
 
-        int neededToTarget = HERBIVORES_TARGET_COUNT - currentHerbivoreCount;
+        int minHerbivores = Math.max(1, area / 35);
+        int targetHerbivores = Math.max(minHerbivores, area / 25);
+
+        if (currentHerbivoreCount >= minHerbivores) return;
+
+        int neededToTarget = targetHerbivores - currentHerbivoreCount;
         int toSpawnThisTurn = Math.min(neededToTarget, HERBIVORES_SPAWN_CAP_PER_TURN);
 
         for (int spawned = 0; spawned < toSpawnThisTurn; spawned++) {
@@ -74,8 +83,30 @@ public final class EnsureMinimumSpawnsAction implements Action {
         }
     }
 
+    private void ensurePredators(WorldMap map, Random random) {
+        int area = map.getWidth() * map.getHeight();
+        int herbivores = map.countAliveHerbivores();
+        int currentPredators = map.countAlivePredators();
+
+        int minPredators = Math.max(1, Math.min(area / 120, Math.max(1, herbivores / 8)));
+        int targetPredators = Math.max(minPredators, Math.min(area / 90, Math.max(1, herbivores / 6)));
+
+        if (currentPredators >= minPredators) return;
+
+        int neededToTarget = targetPredators - currentPredators;
+        int toSpawnThisTurn = Math.min(neededToTarget, PREDATORS_SPAWN_CAP_PER_TURN);
+
+        for (int spawned = 0; spawned < toSpawnThisTurn; spawned++) {
+            if (!tryPlace(map, random, this::createPredator)) break;
+        }
+    }
+
     private Entity createHerbivore(Coordinates spawnPosition) {
         return new Herbivore(spawnPosition, HERBIVORE_SPAWN_HP, HERBIVORE_SPAWN_SPEED);
+    }
+
+    private Entity createPredator(Coordinates spawnPosition) {
+        return new Predator(spawnPosition, PREDATOR_SPAWN_HP, PREDATOR_SPAWN_SPEED, PREDATOR_SPAWN_ATTACK);
     }
 
     private boolean tryPlace(WorldMap map, Random random, EntityFactory factory) {

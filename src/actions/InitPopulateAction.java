@@ -16,7 +16,7 @@ public final class InitPopulateAction implements Action {
         int trees = Math.max(1, area / 33);
         int grass = Math.max(1, area / 12);
         int herbivores = Math.max(1, area / 25);
-        int predators = Math.max(1, herbivores / 6);
+        int predators = Math.max(1, area / 75);
 
         Function<Entity, Boolean> placeRandom = (entity) -> {
             for (int tries = 0; tries < area * 50; tries++) {
@@ -31,18 +31,19 @@ public final class InitPopulateAction implements Action {
         for (int i = 0; i < trees; i++) placeRandom.apply(new Tree(new Coordinates(0, 0)));
         for (int i = 0; i < grass; i++) placeRandom.apply(new Grass(new Coordinates(0, 0)));
 
-        final int herbHp = 40;
+        final int herbHp = 50;
+        final int herbSatiety = 60;
         final int herbSpeed = 1;
 
         final int predHp = 70;
-        final int predSpeed = 2;
-        final int predAttack = 14;
+        final int predSpeed = 1;
+        final int predAttack = 8;
 
         for (int i = 0; i < herbivores; i++) {
-            placeRandom.apply(new Herbivore(new Coordinates(0, 0), 50, 60, 1));
+            placeRandom.apply(new Herbivore(new Coordinates(0, 0), herbHp, herbSatiety, herbSpeed));
         }
         for (int i = 0; i < predators; i++) {
-            placeRandom.apply(new Predator(new Coordinates(0, 0), 70, 1, 8));
+            placeRandom.apply(new Predator(new Coordinates(0, 0), predHp, predSpeed, predAttack));
         }
     }
 }

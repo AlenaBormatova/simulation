@@ -154,6 +154,16 @@ public final class WorldMap {
         return herbivoreCount;
     }
 
+    public int countAlivePredators() {
+        int predatorCount = 0;
+        for (Entity entity : cells.values()) {
+            if (entity instanceof Predator predator && predator.isAlive()) {
+                predatorCount++;
+            }
+        }
+        return predatorCount;
+    }
+
     public Entity get(int x, int y) {
         return cells.get(new Coordinates(x, y));
     }
