@@ -10,6 +10,11 @@ import java.util.Scanner;
 
 public final class Main {
 
+    public static final int NEXT_TURN = 1;
+    public static final int INFINITE_SIMULATION = 2;
+    public static final int EXIT = 3;
+    public static final int STOP_CONTINUOUS = 4;
+
     private static final long DEFAULT_DELAY_MS = 1000;
     private static final long SEED = 42;
 
@@ -37,16 +42,16 @@ public final class Main {
             System.out.print("> ");
             String command = scanner.nextLine().trim();
 
-            if ("0".equals(command)) {
+            if (String.valueOf(EXIT).equals(command)) {
                 simulation.stopSimulation();
                 System.out.println("Выход.");
                 return;
             }
 
             if (!continuous) {
-                if ("1".equals(command)) {
+                if (String.valueOf(NEXT_TURN).equals(command)) {
                     simulation.nextTurn();
-                } else if ("2".equals(command)) {
+                } else if (String.valueOf(INFINITE_SIMULATION).equals(command)) {
                     continuous = true;
 
                     simulationThread = new Thread(() -> simulation.startSimulation(DEFAULT_DELAY_MS));
@@ -55,10 +60,14 @@ public final class Main {
 
                     printMenu(true);
                 } else {
-                    System.out.println("Команда недоступна. Используйте 1, 2 или 0.");
+                    System.out.println("Команда недоступна. Используйте "
+                            + NEXT_TURN + ", "
+                            + INFINITE_SIMULATION + " или "
+                            + EXIT + "."
+                    );
                 }
             } else {
-                if ("3".equals(command)) {
+                if (String.valueOf(STOP_CONTINUOUS).equals(command)) {
                     simulation.stopSimulation();
 
                     if (simulationThread != null) {
@@ -72,7 +81,11 @@ public final class Main {
                     continuous = false;
                     printMenu(false);
                 } else {
-                    System.out.println("Команда недоступна. Используйте 3 или 0.");
+                    System.out.println(
+                            "Команда недоступна. Используйте "
+                                    + STOP_CONTINUOUS + " или "
+                                    + EXIT + "."
+                    );
                 }
             }
         }
@@ -80,18 +93,14 @@ public final class Main {
 
     private static void printMenu(boolean continuous) {
         if (!continuous) {
-            System.out.println("""
-                    Пошаговый режим:
-                      1 — следующий ход
-                      2 — перейти в непрерывный режим
-                      0 — выход
-                    """);
+            System.out.println("Пошаговый режим:");
+            System.out.println(NEXT_TURN + " - следующий ход");
+            System.out.println(INFINITE_SIMULATION + " - бесконечная симуляция");
+            System.out.println(EXIT + " - выход");
         } else {
-            System.out.println("""
-                    Непрерывный режим:
-                      3 — остановить и вернуться в пошаговый режим
-                      0 — выход
-                    """);
+            System.out.println("Непрерывный режим:");
+            System.out.println(STOP_CONTINUOUS + " - остановить и вернуться в пошаговый режим");
+            System.out.println(EXIT + " - выход");
         }
     }
 
