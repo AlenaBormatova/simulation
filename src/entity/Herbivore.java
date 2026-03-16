@@ -40,7 +40,6 @@ public final class Herbivore extends Creature {
             return;
         }
 
-        // 1) Если трава рядом — съесть (ход потрачен)
         Grass adjacent = map.findAdjacentGrass8(getPosition());
         if (adjacent != null) {
             map.remove(adjacent.getPosition());
@@ -49,11 +48,10 @@ public final class Herbivore extends Creature {
             return;
         }
 
-        // 2) Один BFS: ищем ближайшую ПУСТУЮ клетку, соседнюю с травой
         List<Coordinates> path = PathFinder.findPathToNearest(
                 map,
                 getPosition(),
-                map::isAdjacentToGrass8 // цель: пустая клетка рядом с травой
+                map::isAdjacentToGrass8
         );
 
         if (path != null && path.size() > 1) {
@@ -63,17 +61,19 @@ public final class Herbivore extends Creature {
             return;
         }
 
-        // 3) Если цели нет (травы нет или не достижима) — случайный шаг
-        List<Coordinates> free = map.freeNeighbors8(getPosition());
-        if (!free.isEmpty()) {
-            Coordinates next = free.get(random.nextInt(free.size()));
-            map.moveEntity(this, next);
+        List<Coordinates> freeNeighbors = map.freeNeighbors8(getPosition());
+        if (!freeNeighbors.isEmpty()) {
+            Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
+            map.moveEntity(this, nextPosition);
         }
     }
 
     private void tryReproduce(WorldMap map, Random random) {
-        if (hp < Math.ceil(maxHp * REPRODUCTION_HP_RATIO)
-                || hp <= REPRODUCTION_HP_COST
+        int currentHp = getHp();
+        int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
+
+        if (currentHp < reproductionThreshold
+                || currentHp <= REPRODUCTION_HP_COST
                 || random.nextDouble() >= REPRODUCTION_CHANCE) {
             return;
         }
@@ -84,13 +84,15 @@ public final class Herbivore extends Creature {
         }
 
         Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
+
         Herbivore child = new Herbivore(childPosition, maxHp, maxHp, speed);
         if (map.place(child)) {
             setHp(getHp() - REPRODUCTION_HP_COST);
         }
     }
 
-    @Override public String getGlyph() {
+    @Override
+    public String getGlyph() {
         return "\uD83D\uDC07";
     }
 }

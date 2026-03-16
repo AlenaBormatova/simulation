@@ -1,6 +1,6 @@
 package entity;
 
-public class Rock extends Entity {
+public final class Rock extends Entity {
     public Rock(Coordinates position) {
         super(position);
     }

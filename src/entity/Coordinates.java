@@ -1,8 +1,6 @@
 package entity;
 
-import java.util.Objects;
-
-public class Coordinates {
+public final class Coordinates {
     public final int x;
     public final int y;
 
@@ -13,8 +11,12 @@ public class Coordinates {
 
     @Override
     public boolean equals(Object other) {
-        if (this == other) return true;
-        if (!(other instanceof Coordinates that)) return false;
+        if (this == other) {
+            return true;
+        }
+        if (!(other instanceof Coordinates that)) {
+            return false;
+        }
         return x == that.x && y == that.y;
     }
 

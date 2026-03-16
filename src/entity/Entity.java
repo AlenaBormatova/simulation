@@ -1,6 +1,6 @@
 package entity;
 
-abstract public class Entity {
+public abstract class Entity {
     private Coordinates position;
 
     protected Entity(Coordinates position) {
@@ -15,6 +15,5 @@ abstract public class Entity {
         this.position = position;
     }
 
-    // Символ для рендера в консоли
     public abstract String getGlyph();
 }

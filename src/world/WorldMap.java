@@ -1,8 +1,16 @@
 package world;
 
-import entity.*;
+import entity.Coordinates;
+import entity.Creature;
+import entity.Entity;
+import entity.Grass;
+import entity.Herbivore;
+import entity.Predator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class WorldMap {
 
@@ -11,7 +19,9 @@ public final class WorldMap {
     private final int height;
 
     public WorldMap(int width, int height) {
-        if (width <= 0 || height <= 0) throw new IllegalArgumentException("Invalid map size");
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("Invalid map size");
+        }
         this.width = width;
         this.height = height;
     }
@@ -19,16 +29,28 @@ public final class WorldMap {
     public int getWidth() {
         return width;
     }
+
     public int getHeight() {
         return height;
     }
 
+    public int getArea() {
+        return width * height;
+    }
+
     public boolean isValid(Coordinates position) {
-        return position.x >= 0 && position.x < width && position.y >= 0 && position.y < height;
+        return position.x >= 0
+                && position.x < width
+                && position.y >= 0
+                && position.y < height;
     }
 
     public Entity get(Coordinates position) {
         return cells.get(position);
+    }
+
+    public Entity get(int x, int y) {
+        return cells.get(new Coordinates(x, y));
     }
 
     public boolean isEmpty(Coordinates position) {
@@ -37,7 +59,11 @@ public final class WorldMap {
 
     public boolean place(Entity entity) {
         Coordinates position = entity.getPosition();
-        if (!isValid(position) || !isEmpty(position)) return false;
+
+        if (!isValid(position) || !isEmpty(position)) {
+            return false;
+        }
+
         cells.put(position, entity);
         return true;
     }
@@ -47,10 +73,13 @@ public final class WorldMap {
     }
 
     public boolean moveEntity(Creature creature, Coordinates destination) {
-        if (!isValid(destination) || !isEmpty(destination)) return false;
+        if (!isValid(destination) || !isEmpty(destination)) {
+            return false;
+        }
 
         Coordinates from = creature.getPosition();
         Entity occupant = cells.get(from);
+
         if (occupant != creature) {
             throw new IllegalStateException("Creature position out of sync with WorldMap: " + from);
         }
@@ -62,23 +91,30 @@ public final class WorldMap {
     }
 
     public List<Creature> getAliveCreaturesSnapshot() {
-        List<Creature> aliveCreatures = new ArrayList<>();
+        List<Creature> creatures = new ArrayList<>();
+
         for (Entity entity : cells.values()) {
             if (entity instanceof Creature creature && creature.isAlive()) {
-                aliveCreatures.add(creature);
+                creatures.add(creature);
             }
         }
-        return aliveCreatures;
+        return creatures;
     }
 
-    // 8-направленные соседи (движение/поиск/соседство согласованы)
-    public List<Coordinates> neighbors8(Coordinates p) {
+    public List<Coordinates> neighbors8(Coordinates position) {
         List<Coordinates> neighbors = new ArrayList<>(8);
+
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
-                if (dx == 0 && dy == 0) continue;
-                Coordinates neighborPosition = new Coordinates(p.x + dx, p.y + dy);
-                if (isValid(neighborPosition)) neighbors.add(neighborPosition);
+                if (dx == 0 && dy == 0) {
+                    continue;
+                }
+
+                Coordinates neighborPosition = new Coordinates(position.x + dx, position.y + dy);
+
+                if (isValid(neighborPosition)) {
+                    neighbors.add(neighborPosition);
+                }
             }
         }
         return neighbors;
@@ -86,23 +122,22 @@ public final class WorldMap {
 
     public List<Coordinates> freeNeighbors8(Coordinates position) {
         List<Coordinates> freeNeighborPositions = new ArrayList<>();
+
         for (Coordinates neighborPosition : neighbors8(position)) {
-            if (isEmpty(neighborPosition)) freeNeighborPositions.add(neighborPosition);
+            if (isEmpty(neighborPosition)) {
+                freeNeighborPositions.add(neighborPosition);
+            }
         }
         return freeNeighborPositions;
     }
 
-    public boolean areNeighbors8(Coordinates a, Coordinates b) {
-        int dx = Math.abs(a.x - b.x);
-        int dy = Math.abs(a.y - b.y);
-        return (dx <= 1 && dy <= 1) && !(dx == 0 && dy == 0);
-    }
-
-    // Утилиты "рядом" для правильной логики "есть/атаковать через соседство"
     public Grass findAdjacentGrass8(Coordinates position) {
         for (Coordinates neighborPosition : neighbors8(position)) {
             Entity neighborEntity = get(neighborPosition);
-            if (neighborEntity instanceof Grass grass) return grass;
+
+            if (neighborEntity instanceof Grass grass) {
+                return grass;
+            }
         }
         return null;
     }
@@ -110,6 +145,7 @@ public final class WorldMap {
     public Herbivore findAdjacentHerbivore8(Coordinates position) {
         for (Coordinates neighborPosition : neighbors8(position)) {
             Entity neighborEntity = get(neighborPosition);
+
             if (neighborEntity instanceof Herbivore herbivore && herbivore.isAlive()) {
                 return herbivore;
             }
@@ -118,24 +154,16 @@ public final class WorldMap {
     }
 
     public boolean isAdjacentToGrass8(Coordinates position) {
-        for (Coordinates neighborPosition : neighbors8(position)) {
-            if (get(neighborPosition) instanceof Grass) return true;
-        }
-        return false;
+        return findAdjacentGrass8(position) != null;
     }
 
     public boolean isAdjacentToAliveHerbivore8(Coordinates position) {
-        for (Coordinates neighborPosition : neighbors8(position)) {
-            Entity neighborEntity = get(neighborPosition);
-            if (neighborEntity instanceof Herbivore herbivore && herbivore.isAlive()) {
-                return true;
-            }
-        }
-        return false;
+        return findAdjacentHerbivore8(position) != null;
     }
 
     public int countGrass() {
         int grassCount = 0;
+
         for (Entity entity : cells.values()) {
             if (entity instanceof Grass) {
                 grassCount++;
@@ -146,6 +174,7 @@ public final class WorldMap {
 
     public int countAliveHerbivores() {
         int herbivoreCount = 0;
+
         for (Entity entity : cells.values()) {
             if (entity instanceof Herbivore herbivore && herbivore.isAlive()) {
                 herbivoreCount++;
@@ -162,9 +191,5 @@ public final class WorldMap {
             }
         }
         return predatorCount;
-    }
-
-    public Entity get(int x, int y) {
-        return cells.get(new Coordinates(x, y));
     }
 }

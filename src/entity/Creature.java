@@ -7,7 +7,7 @@ import java.util.Random;
 public abstract class Creature extends Entity {
 
     protected int hp;
-    protected int speed;
+    protected final int speed;
 
     public Creature(Coordinates position, int hp, int speed) {
         super(position);
@@ -23,18 +23,12 @@ public abstract class Creature extends Entity {
         this.hp = Math.max(0, hp);
     }
 
-    public int getSpeed() {
-        return speed;
-    }
-
     public boolean isAlive() {
         return hp > 0;
     }
 
-    public abstract void makeMove(WorldMap worldMap, Random random);
+    public abstract void makeMove(WorldMap map, Random random);
 
     @Override
-    public String getGlyph() {
-        return "?";
-    }
+    public abstract String getGlyph();
 }

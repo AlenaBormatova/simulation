@@ -1,4 +1,6 @@
-import actions.*;
+import actions.EnsureMinimumSpawnsAction;
+import actions.InitPopulateAction;
+import actions.MoveCreaturesAction;
 import render.ConsoleRenderer;
 import sim.Simulation;
 import world.WorldMap;
@@ -6,66 +8,62 @@ import world.WorldMap;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Main {
+public final class Main {
 
     private static final long DEFAULT_DELAY_MS = 1000;
     private static final long SEED = 42;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-
         int width = readPositiveInt(scanner, "Введите ширину мира: ");
         int height = readPositiveInt(scanner, "Введите высоту мира: ");
 
         WorldMap map = new WorldMap(width, height);
-
         ConsoleRenderer renderer = new ConsoleRenderer("□ ");
-
         Simulation simulation = new Simulation(map, renderer, new Random(SEED));
 
         simulation.addInitAction(new InitPopulateAction());
-
         simulation.addTurnAction(new EnsureMinimumSpawnsAction());
-        simulation.addTurnAction(new MoveCreaturesAction(true));
+        simulation.addTurnAction(new MoveCreaturesAction());
 
         simulation.init();
 
         boolean continuous = false;
-        Thread continuousThread = null;
+        Thread simulationThread = null;
 
         printMenu(continuous);
 
         while (true) {
             System.out.print("> ");
-            String cmd = scanner.nextLine().trim();
+            String command = scanner.nextLine().trim();
 
-            if ("0".equals(cmd)) {
+            if ("0".equals(command)) {
                 simulation.stopSimulation();
                 System.out.println("Выход.");
                 return;
             }
 
             if (!continuous) {
-                if ("1".equals(cmd)) {
+                if ("1".equals(command)) {
                     simulation.nextTurn();
-                } else if ("2".equals(cmd)) {
+                } else if ("2".equals(command)) {
                     continuous = true;
 
-                    continuousThread = new Thread(() -> simulation.startSimulation(DEFAULT_DELAY_MS));
-                    continuousThread.setDaemon(true);
-                    continuousThread.start();
+                    simulationThread = new Thread(() -> simulation.startSimulation(DEFAULT_DELAY_MS));
+                    simulationThread.setDaemon(true);
+                    simulationThread.start();
 
                     printMenu(true);
                 } else {
                     System.out.println("Команда недоступна. Используйте 1, 2 или 0.");
                 }
             } else {
-                if ("3".equals(cmd)) {
+                if ("3".equals(command)) {
                     simulation.stopSimulation();
 
-                    if (continuousThread != null) {
+                    if (simulationThread != null) {
                         try {
-                            continuousThread.join(300);
+                            simulationThread.join(300);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         }
@@ -101,10 +99,15 @@ public class Main {
         while (true) {
             System.out.print(prompt);
             String input = scanner.nextLine().trim();
+
             try {
                 int value = Integer.parseInt(input);
-                if (value > 0) return value;
-            } catch (NumberFormatException ignored) {}
+                if (value > 0) {
+                    return value;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+
             System.out.println("Введите положительное целое число.");
         }
     }

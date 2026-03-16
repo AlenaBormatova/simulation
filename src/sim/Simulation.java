@@ -26,44 +26,51 @@ public final class Simulation {
         this.random = random;
     }
 
-    public void addInitAction(Action a) { initActions.add(a); }
-    public void addTurnAction(Action a) { turnActions.add(a); }
+    public void addInitAction(Action a) {
+        initActions.add(a);
+    }
+
+    public void addTurnAction(Action a) {
+        turnActions.add(a);
+    }
 
     public void init() {
-        for (Action a : initActions) a.execute(map, random, turn);
+        for (Action action : initActions) {
+            action.execute(map, random, turn);
+        }
         renderer.render(map, turn);
     }
 
     public void nextTurn() {
         turn++;
-        for (Action a : turnActions) a.execute(map, random, turn);
+
+        for (Action action : turnActions) {
+            action.execute(map, random, turn);
+        }
         renderer.render(map, turn);
     }
 
     public void startSimulation(long delayMs) {
         running = true;
+
         while (running) {
             nextTurn();
 
-            if (delayMs > 0) {
-                try {
-                    Thread.sleep(delayMs);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
+            if (delayMs <= 0) {
+                continue;
+            }
+
+            try {
+                Thread.sleep(delayMs);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
             }
         }
     }
 
 
-    public void stopSimulation() { running = false; }
-
-    public int getTurn() {
-        return turn;
-    }
-
-    public WorldMap getMap() {
-        return map;
+    public void stopSimulation() {
+        running = false;
     }
 }
