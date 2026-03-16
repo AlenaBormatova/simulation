@@ -14,10 +14,10 @@ public final class EnsureMinimumSpawnsAction implements Action {
     private static final int MAX_SPAWN_ATTEMPTS_PER_ENTITY = 3000;
 
     private static final int MIN_GRASS_FLOOR = 1;
-    private static final int GRASS_SPAWN_CAP_PER_TURN = 45;
+    private static final int GRASS_SPAWN_CAP_PER_TURN = 20;
     private static final int GRASS_MIN_BY_AREA_DIVISOR = 15;
     private static final int GRASS_TARGET_BY_AREA_DIVISOR = 10;
-    private static final int GRASS_TARGET_PER_HERBIVORE_MULTIPLIER = 2;
+    private static final int GRASS_TARGET_PER_HERBIVORE_MULTIPLIER = 1;
 
     private static final int HERBIVORES_SPAWN_CAP_PER_TURN = 3;
     private static final int HERBIVORE_MIN_DENSITY_DIVISOR = 35;
@@ -31,7 +31,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
     private static final int PREDATOR_MIN_BY_HERBIVORES_DIVISOR = 6;
     private static final int PREDATOR_TARGET_BY_HERBIVORES_DIVISOR = 4;
     private static final int PREDATOR_SPAWN_HP = 40;
-    private static final int PREDATOR_SPAWN_SPEED = 1;
+    private static final int PREDATOR_SPAWN_SPEED = 2;
     private static final int PREDATOR_SPAWN_ATTACK = 8;
 
     @Override
@@ -96,7 +96,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
 
         int minPredatorsByArea = Math.max(1, mapArea / PREDATOR_MIN_BY_AREA_DIVISOR);
         int minPredatorsByHerbivores = Math.max(1, herbivoreCount / PREDATOR_MIN_BY_HERBIVORES_DIVISOR);
-        int minPredators = Math.max(1, Math.min(minPredatorsByArea, minPredatorsByHerbivores));
+        int minPredators = Math.max(minPredatorsByArea, minPredatorsByHerbivores);
 
         int targetPredatorsByArea = Math.max(1, mapArea / PREDATOR_TARGET_BY_AREA_DIVISOR);
         int targetPredatorsByHerbivores = Math.max(1, herbivoreCount / PREDATOR_TARGET_BY_HERBIVORES_DIVISOR);

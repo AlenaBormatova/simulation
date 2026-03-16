@@ -9,11 +9,11 @@ import java.util.Random;
 public final class Herbivore extends Creature {
 
     private static final int METABOLISM_PER_TURN = 1;
-    private static final int HEAL_FROM_GRASS = 8;
+    private static final int HEAL_FROM_GRASS = 6;
 
     private static final double REPRODUCTION_HP_RATIO = 0.92;
-    private static final int REPRODUCTION_HP_COST = 16;
-    private static final double REPRODUCTION_CHANCE = 0.08;
+    private static final int REPRODUCTION_HP_COST = 20;
+    private static final double REPRODUCTION_CHANCE = 0.05;
 
     private final int maxHp;
 
