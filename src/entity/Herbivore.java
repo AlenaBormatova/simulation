@@ -4,6 +4,7 @@ import path.PathFinder;
 import world.WorldMap;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public final class Herbivore extends Creature {
@@ -40,9 +41,9 @@ public final class Herbivore extends Creature {
             return;
         }
 
-        Grass adjacent = map.findAdjacentGrass8(getPosition());
-        if (adjacent != null) {
-            map.remove(adjacent.getPosition());
+        Optional<Grass> adjacent = map.findAdjacentGrass8(getPosition());
+        if (adjacent.isPresent()) {
+            map.remove(adjacent.get().getPosition());
             setHp(getHp() + HEAL_FROM_GRASS);
             tryReproduce(map, random);
             return;

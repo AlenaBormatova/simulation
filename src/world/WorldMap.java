@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public final class WorldMap {
 
@@ -131,15 +132,15 @@ public final class WorldMap {
         return freeNeighborPositions;
     }
 
-    public Grass findAdjacentGrass8(Coordinates position) {
+    public Optional<Grass> findAdjacentGrass8(Coordinates position) {
         for (Coordinates neighborPosition : neighbors8(position)) {
             Entity neighborEntity = get(neighborPosition);
 
             if (neighborEntity instanceof Grass grass) {
-                return grass;
+                return Optional.of(grass);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public Herbivore findAdjacentHerbivore8(Coordinates position) {

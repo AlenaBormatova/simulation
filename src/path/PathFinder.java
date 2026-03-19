@@ -20,7 +20,7 @@ public final class PathFinder {
                                                       Coordinates startPosition,
                                                       Predicate<Coordinates> goalPredicate) {
         if (!map.isValid(startPosition)) {
-            return null;
+            return List.of();
         }
 
         if (goalPredicate.test(startPosition)) {
@@ -55,7 +55,7 @@ public final class PathFinder {
                 queue.add(neighborPosition);
             }
         }
-        return null;
+        return List.of();
     }
 
     private static List<Coordinates> reconstructPath(Map<Coordinates, Coordinates> parent,
