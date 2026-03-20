@@ -73,9 +73,13 @@ public final class WorldMap {
         cells.remove(position);
     }
 
-    public boolean moveEntity(Creature creature, Coordinates destination) {
-        if (!isValid(destination) || !isEmpty(destination)) {
-            return false;
+    public void moveEntity(Creature creature, Coordinates destination) {
+        if (!isValid(destination)) {
+            throw new IllegalArgumentException("Invalid destination: " + destination);
+        }
+
+        if (!isEmpty(destination)) {
+            throw new IllegalStateException("Destination is occupied: " + destination);
         }
 
         Coordinates from = creature.getPosition();
@@ -88,7 +92,6 @@ public final class WorldMap {
         cells.remove(from);
         creature.setPosition(destination);
         cells.put(destination, creature);
-        return true;
     }
 
     public List<Creature> getAliveCreaturesSnapshot() {
