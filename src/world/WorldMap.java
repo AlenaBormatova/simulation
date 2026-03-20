@@ -143,23 +143,23 @@ public final class WorldMap {
         return Optional.empty();
     }
 
-    public Herbivore findAdjacentHerbivore8(Coordinates position) {
+    public Optional<Herbivore> findAdjacentHerbivore8(Coordinates position) {
         for (Coordinates neighborPosition : neighbors8(position)) {
             Entity neighborEntity = get(neighborPosition);
 
             if (neighborEntity instanceof Herbivore herbivore && herbivore.isAlive()) {
-                return herbivore;
+                return Optional.of(herbivore);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public boolean isAdjacentToGrass8(Coordinates position) {
-        return findAdjacentGrass8(position) != null;
+        return findAdjacentGrass8(position).isPresent();
     }
 
     public boolean isAdjacentToAliveHerbivore8(Coordinates position) {
-        return findAdjacentHerbivore8(position) != null;
+        return findAdjacentHerbivore8(position).isPresent();
     }
 
     public int countGrass() {

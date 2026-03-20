@@ -43,7 +43,8 @@ public final class Herbivore extends Creature {
 
         Optional<Grass> adjacent = map.findAdjacentGrass8(getPosition());
         if (adjacent.isPresent()) {
-            map.remove(adjacent.get().getPosition());
+            Grass grass = adjacent.orElseThrow();
+            map.remove(grass.getPosition());
             setHp(getHp() + HEAL_FROM_GRASS);
             tryReproduce(map, random);
             return;
@@ -55,7 +56,7 @@ public final class Herbivore extends Creature {
                 map::isAdjacentToGrass8
         );
 
-        if (path != null && path.size() > 1) {
+        if (path.size() > 1) {
             int steps = Math.min(speed, path.size() - 1);
             Coordinates newPos = path.get(steps);
             map.moveEntity(this, newPos);

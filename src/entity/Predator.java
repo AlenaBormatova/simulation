@@ -4,6 +4,7 @@ import path.PathFinder;
 import world.WorldMap;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public final class Predator extends Creature {
@@ -38,8 +39,9 @@ public final class Predator extends Creature {
             return;
         }
 
-        Herbivore adjacentHerbivore = map.findAdjacentHerbivore8(getPosition());
-        if (adjacentHerbivore != null) {
+        Optional<Herbivore> adjacent = map.findAdjacentHerbivore8(getPosition());
+        if (adjacent.isPresent()) {
+            Herbivore adjacentHerbivore = adjacent.orElseThrow();
             adjacentHerbivore.setHp(adjacentHerbivore.getHp() - attack);
 
             if (!adjacentHerbivore.isAlive()) {
@@ -56,7 +58,7 @@ public final class Predator extends Creature {
                 map::isAdjacentToAliveHerbivore8
         );
 
-        if (path == null || path.size() <= 1) {
+        if (path.size() <= 1) {
             List<Coordinates> freeNeighbors = map.freeNeighbors8(getPosition());
             if (!freeNeighbors.isEmpty()) {
                 Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
