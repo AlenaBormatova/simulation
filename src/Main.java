@@ -37,7 +37,7 @@ public final class Main {
         boolean continuous = false;
         Thread simulationThread = null;
 
-        printMenu(continuous);
+        printMenu(false);
 
         while (true) {
             System.out.print("> ");
@@ -71,12 +71,12 @@ public final class Main {
                 if (String.valueOf(STOP_CONTINUOUS).equals(command)) {
                     simulation.stopSimulation();
 
-                    if (simulationThread != null) {
-                        try {
-                            simulationThread.join(300);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
+                    simulationThread.interrupt();
+                    try {
+                        simulationThread.join();
+                        simulationThread = null;
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
                     }
 
                     continuous = false;
