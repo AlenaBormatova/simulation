@@ -94,9 +94,4 @@ public final class Predator extends Creature {
             setHp(currentHp - REPRODUCTION_HP_COST);
         }
     }
-
-    @Override
-    public String getGlyph() {
-        return "\uD83D\uDC3A";
-    }
 }

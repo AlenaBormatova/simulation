@@ -14,6 +14,4 @@ public abstract class Entity {
     public void setPosition(Coordinates position) {
         this.position = position;
     }
-
-    public abstract String getGlyph();
 }

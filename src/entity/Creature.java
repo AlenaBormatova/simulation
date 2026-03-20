@@ -28,7 +28,4 @@ public abstract class Creature extends Entity {
     }
 
     public abstract void makeMove(WorldMap map, Random random);
-
-    @Override
-    public abstract String getGlyph();
 }

@@ -92,9 +92,4 @@ public final class Herbivore extends Creature {
             setHp(getHp() - REPRODUCTION_HP_COST);
         }
     }
-
-    @Override
-    public String getGlyph() {
-        return "\uD83D\uDC07";
-    }
 }

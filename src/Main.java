@@ -2,6 +2,7 @@ import actions.EnsureMinimumSpawnsAction;
 import actions.InitPopulateAction;
 import actions.MoveCreaturesAction;
 import render.ConsoleRenderer;
+import render.EmojiGlyphSet;
 import sim.Simulation;
 import world.WorldMap;
 
@@ -24,7 +25,7 @@ public final class Main {
         int height = readPositiveInt(scanner, "Введите высоту мира: ");
 
         WorldMap map = new WorldMap(width, height);
-        ConsoleRenderer renderer = new ConsoleRenderer("□ ");
+        ConsoleRenderer renderer = new ConsoleRenderer("⬛", new EmojiGlyphSet());
         Simulation simulation = new Simulation(map, renderer, new Random(SEED));
 
         simulation.addInitAction(new InitPopulateAction());
