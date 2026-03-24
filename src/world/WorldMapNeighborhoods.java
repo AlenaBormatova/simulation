@@ -19,7 +19,7 @@ public final class WorldMapNeighborhoods {
                     continue;
                 }
 
-                Coordinates neighborPosition = new Coordinates(position.x + dx, position.y + dy);
+                Coordinates neighborPosition = new Coordinates(position.x() + dx, position.y() + dy);
                 if (map.isValid(neighborPosition)) {
                     neighbors.add(neighborPosition);
                 }
