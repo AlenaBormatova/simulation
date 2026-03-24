@@ -10,6 +10,9 @@ import java.util.function.Predicate;
 
 public final class WorldMapNeighborhoods {
 
+    public record Located<T extends Entity>(Coordinates position, T entity) {
+    }
+
     public static List<Coordinates> neighbors8(WorldMap map, Coordinates position) {
         List<Coordinates> neighbors = new ArrayList<>(8);
 
@@ -39,16 +42,16 @@ public final class WorldMapNeighborhoods {
         return freeNeighbors;
     }
 
-    public static <T extends Entity> Optional<T> findAdjacent(WorldMap map,
-                                                              Coordinates position,
-                                                              Class<T> type) {
+    public static <T extends Entity> Optional<Located<T>> findAdjacent(WorldMap map,
+                                                                       Coordinates position,
+                                                                       Class<T> type) {
         return findAdjacent(map, position, type, entity -> true);
     }
 
-    public static <T extends Entity> Optional<T> findAdjacent(WorldMap map,
-                                                              Coordinates position,
-                                                              Class<T> type,
-                                                              Predicate<T> filter) {
+    public static <T extends Entity> Optional<Located<T>> findAdjacent(WorldMap map,
+                                                                       Coordinates position,
+                                                                       Class<T> type,
+                                                                       Predicate<T> filter) {
         for (Coordinates neighborPosition : neighbors8(map, position)) {
             Entity neighborEntity = map.get(neighborPosition);
 
@@ -58,7 +61,7 @@ public final class WorldMapNeighborhoods {
 
             T typedEntity = type.cast(neighborEntity);
             if (filter.test(typedEntity)) {
-                return Optional.of(typedEntity);
+                return Optional.of(new Located<>(neighborPosition, typedEntity));
             }
         }
         return Optional.empty();

@@ -27,45 +27,42 @@ public final class SpawnEntityFactory {
         this.balanceConfig = balanceConfig;
     }
 
-    public Rock createRock(Coordinates position) {
-        return new Rock(position);
+    public Rock createRock() {
+        return new Rock();
     }
 
-    public Tree createTree(Coordinates position) {
-        return new Tree(position);
+    public Tree createTree() {
+        return new Tree();
     }
 
-    public Grass createGrass(Coordinates position) {
-        return new Grass(position);
+    public Grass createGrass() {
+        return new Grass();
     }
 
-    public Herbivore createInitialHerbivore(Coordinates position) {
+    public Herbivore createInitialHerbivore() {
         return new Herbivore(
-                position,
                 INITIAL_HERBIVORE_HP,
                 INITIAL_HERBIVORE_SATIETY,
                 INITIAL_HERBIVORE_SPEED
         );
     }
 
-    public Predator createInitialPredator(Coordinates position) {
+    public Predator createInitialPredator() {
         return new Predator(
-                position,
                 INITIAL_PREDATOR_HP,
                 INITIAL_PREDATOR_SPEED,
                 INITIAL_PREDATOR_ATTACK
         );
     }
 
-    public Herbivore createMinimumSpawnHerbivore(Coordinates position) {
+    public Herbivore createMinimumSpawnHerbivore() {
         SpawnBalanceConfig.HerbivoreSettings settings = balanceConfig.herbivores();
-        return new Herbivore(position, settings.spawnHp(), settings.spawnSpeed());
+        return new Herbivore(settings.spawnHp(), settings.spawnSpeed());
     }
 
-    public Predator createMinimumSpawnPredator(Coordinates position) {
+    public Predator createMinimumSpawnPredator() {
         SpawnBalanceConfig.PredatorSettings settings = balanceConfig.predators();
         return new Predator(
-                position,
                 settings.spawnHp(),
                 settings.spawnSpeed(),
                 settings.spawnAttack()

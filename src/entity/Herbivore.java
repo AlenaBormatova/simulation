@@ -19,12 +19,12 @@ public final class Herbivore extends Creature {
 
     private final int maxHp;
 
-    public Herbivore(Coordinates position, int hp, int speed) {
-        this(position, hp, hp, speed);
+    public Herbivore(int hp, int speed) {
+        this(hp, hp, speed);
     }
 
-    public Herbivore(Coordinates position, int hp, int maxHp, int speed) {
-        super(position, hp, speed);
+    public Herbivore(int hp, int maxHp, int speed) {
+        super(hp, speed);
         this.maxHp = Math.max(1, maxHp);
         setHp(hp);
     }
@@ -35,43 +35,44 @@ public final class Herbivore extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap map, Random random) {
+    public void makeMove(WorldMap map, Coordinates position, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            map.remove(getPosition());
+            map.remove(position);
             return;
         }
 
-        Optional<Grass> adjacent = WorldMapNeighborhoods.findAdjacent(map, getPosition(), Grass.class);
+        Optional<WorldMapNeighborhoods.Located<Grass>> adjacent =
+                WorldMapNeighborhoods.findAdjacent(map, position, Grass.class);
+
         if (adjacent.isPresent()) {
-            Grass grass = adjacent.orElseThrow();
-            map.remove(grass.getPosition());
+            map.remove(adjacent.orElseThrow().position());
             setHp(getHp() + HEAL_FROM_GRASS);
-            tryReproduce(map, random);
+            tryReproduce(map, position, random);
             return;
         }
 
         List<Coordinates> path = PathFinder.findPathToNearest(
                 map,
-                getPosition(),
-                position -> WorldMapNeighborhoods.isAdjacentTo(map, position, Grass.class)
+                position,
+                candidate -> WorldMapNeighborhoods.isAdjacentTo(map, candidate, Grass.class)
         );
 
         if (path.size() > 1) {
             int steps = Math.min(speed, path.size() - 1);
             Coordinates newPos = path.get(steps);
-            map.moveEntity(this, newPos);
+            map.move(position, newPos);
             return;
         }
 
-        List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
+        List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, position);
         if (!freeNeighbors.isEmpty()) {
             Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
-            map.moveEntity(this, nextPosition);
+            map.move(position, nextPosition);
         }
     }
 
-    private void tryReproduce(WorldMap map, Random random) {
+    private void tryReproduce(WorldMap map, Coordinates position, Random random) {
         int currentHp = getHp();
         int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
 
@@ -81,15 +82,15 @@ public final class Herbivore extends Creature {
             return;
         }
 
-        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
+        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, position);
         if (freeNeighborPositions.isEmpty()) {
             return;
         }
 
         Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
 
-        Herbivore child = new Herbivore(childPosition, maxHp, maxHp, speed);
-        if (map.place(child)) {
+        Herbivore child = new Herbivore(maxHp, maxHp, speed);
+        if (map.place(childPosition, child)) {
             setHp(getHp() - REPRODUCTION_HP_COST);
         }
     }

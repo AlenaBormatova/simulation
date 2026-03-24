@@ -31,7 +31,7 @@ public final class EntitySpawner {
             );
 
             if (map.isEmpty(spawnPosition)) {
-                map.place(factory.create(spawnPosition));
+                map.place(spawnPosition, factory.create());
                 return true;
             }
         }
@@ -41,7 +41,7 @@ public final class EntitySpawner {
 
     @FunctionalInterface
     public interface SpawnFactory {
-        Entity create(Coordinates position);
+        Entity create();
     }
 
     private EntitySpawner() {

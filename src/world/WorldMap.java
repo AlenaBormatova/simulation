@@ -1,7 +1,6 @@
 package world;
 
 import entity.Coordinates;
-import entity.Creature;
 import entity.Entity;
 
 import java.util.ArrayList;
@@ -10,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public final class WorldMap {
+
+    public record Occupant(Coordinates position, Entity entity) {
+    }
 
     private final Map<Coordinates, Entity> cells = new HashMap<>();
     private final int width;
@@ -54,9 +56,7 @@ public final class WorldMap {
         return !cells.containsKey(position);
     }
 
-    public boolean place(Entity entity) {
-        Coordinates position = entity.getPosition();
-
+    public boolean place(Coordinates position, Entity entity) {
         if (!isValid(position) || !isEmpty(position)) {
             return false;
         }
@@ -69,25 +69,35 @@ public final class WorldMap {
         cells.remove(position);
     }
 
-    public void moveEntity(Creature creature, Coordinates destination) {
-        if (!isValid(destination)) {
-            throw new IllegalArgumentException("Invalid destination: " + destination);
+    public void move(Coordinates from, Coordinates to) {
+        if (!isValid(from)) {
+            throw new IllegalArgumentException("Invalid source: " + from);
         }
 
-        if (!isEmpty(destination)) {
-            throw new IllegalStateException("Destination is occupied: " + destination);
+        if (!isValid(to)) {
+            throw new IllegalArgumentException("Invalid destination: " + to);
         }
 
-        Coordinates from = creature.getPosition();
-        Entity occupant = cells.get(from);
-
-        if (occupant != creature) {
-            throw new IllegalStateException("Creature position out of sync with WorldMap: " + from);
+        if (isEmpty(from)) {
+            throw new IllegalStateException("No entity at source: " + from);
         }
 
-        cells.remove(from);
-        creature.setPosition(destination);
-        cells.put(destination, creature);
+        if (!isEmpty(to)) {
+            throw new IllegalStateException("Destination is occupied: " + to);
+        }
+
+        Entity entity = cells.remove(from);
+        cells.put(to, entity);
+    }
+
+    public List<Occupant> getOccupantsSnapshot() {
+        List<Occupant> snapshot = new ArrayList<>(cells.size());
+
+        for (Map.Entry<Coordinates, Entity> entry : cells.entrySet()) {
+            snapshot.add(new Occupant(entry.getKey(), entry.getValue()));
+        }
+
+        return snapshot;
     }
 
     public List<Entity> getEntitiesSnapshot() {

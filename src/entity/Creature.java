@@ -9,8 +9,7 @@ public abstract class Creature extends Entity {
     protected int hp;
     protected final int speed;
 
-    public Creature(Coordinates position, int hp, int speed) {
-        super(position);
+    public Creature(int hp, int speed) {
         this.hp = hp;
         this.speed = speed;
     }
@@ -27,5 +26,5 @@ public abstract class Creature extends Entity {
         return hp > 0;
     }
 
-    public abstract void makeMove(WorldMap map, Random random);
+    public abstract void makeMove(WorldMap map, Coordinates position, Random random);
 }

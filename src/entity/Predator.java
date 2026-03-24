@@ -20,8 +20,8 @@ public final class Predator extends Creature {
     private final int attack;
     private final int maxHp;
 
-    public Predator(Coordinates position, int hp, int speed, int attack) {
-        super(position, hp, speed);
+    public Predator(int hp, int speed, int attack) {
+        super(hp, speed);
         this.attack = attack;
         this.maxHp = Math.max(1, hp);
         setHp(hp);
@@ -33,53 +33,56 @@ public final class Predator extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap map, Random random) {
+    public void makeMove(WorldMap map, Coordinates position, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            map.remove(getPosition());
+            map.remove(position);
             return;
         }
 
-        Optional<Herbivore> adjacent = WorldMapNeighborhoods.findAdjacent(
-                map,
-                getPosition(),
-                Herbivore.class,
-                Herbivore::isAlive
-        );
+        Optional<WorldMapNeighborhoods.Located<Herbivore>> adjacent =
+                WorldMapNeighborhoods.findAdjacent(
+                        map,
+                        position,
+                        Herbivore.class,
+                        Herbivore::isAlive
+                );
 
         if (adjacent.isPresent()) {
-            Herbivore adjacentHerbivore = adjacent.orElseThrow();
-            adjacentHerbivore.setHp(adjacentHerbivore.getHp() - attack);
+            Herbivore target = adjacent.orElseThrow().entity();
+            Coordinates targetPosition = adjacent.orElseThrow().position();
 
-            if (!adjacentHerbivore.isAlive()) {
-                map.remove(adjacentHerbivore.getPosition());
+            target.setHp(target.getHp() - attack);
+
+            if (!target.isAlive()) {
+                map.remove(targetPosition);
                 setHp(getHp() + HEAL_ON_KILL);
-                tryReproduce(map, random);
+                tryReproduce(map, position, random);
             }
             return;
         }
 
         List<Coordinates> path = PathFinder.findPathToNearest(
                 map,
-                getPosition(),
-                position -> WorldMapNeighborhoods.isAdjacentTo(map, position, Herbivore.class, Herbivore::isAlive)
+                position,
+                candidate -> WorldMapNeighborhoods.isAdjacentTo(map, candidate, Herbivore.class, Herbivore::isAlive)
         );
 
         if (path.size() <= 1) {
-            List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
+            List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, position);
             if (!freeNeighbors.isEmpty()) {
                 Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
-                map.moveEntity(this, nextPosition);
+                map.move(position, nextPosition);
             }
             return;
         }
 
         int steps = Math.min(speed, path.size() - 1);
         Coordinates newPosition = path.get(steps);
-        map.moveEntity(this, newPosition);
+        map.move(position, newPosition);
     }
 
-    private void tryReproduce(WorldMap map, Random random) {
+    private void tryReproduce(WorldMap map, Coordinates position, Random random) {
         int currentHp = getHp();
         int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
 
@@ -89,15 +92,15 @@ public final class Predator extends Creature {
             return;
         }
 
-        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
+        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, position);
         if (freeNeighborPositions.isEmpty()) {
             return;
         }
 
         Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
 
-        Predator child = new Predator(childPosition, maxHp, speed, attack);
-        if (map.place(child)) {
+        Predator child = new Predator(maxHp, speed, attack);
+        if (map.place(childPosition, child)) {
             setHp(currentHp - REPRODUCTION_HP_COST);
         }
     }
