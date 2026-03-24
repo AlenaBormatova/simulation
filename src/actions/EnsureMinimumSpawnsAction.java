@@ -29,7 +29,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap map, Random random, int turn) {
+    public void execute(WorldMap map, Random random) {
         ensurePopulation(map, random, buildGrassSpawnPlan(map));
         ensurePopulation(map, random, buildHerbivoreSpawnPlan(map));
         ensurePopulation(map, random, buildPredatorSpawnPlan(map));

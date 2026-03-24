@@ -36,7 +36,7 @@ public final class Simulation {
 
     public void init() {
         for (Action action : initActions) {
-            action.execute(map, random, turn);
+            action.execute(map, random);
         }
         renderer.render(map, turn);
     }
@@ -45,7 +45,7 @@ public final class Simulation {
         turn++;
 
         for (Action action : turnActions) {
-            action.execute(map, random, turn);
+            action.execute(map, random);
         }
         renderer.render(map, turn);
     }
@@ -68,7 +68,6 @@ public final class Simulation {
             }
         }
     }
-
 
     public void stopSimulation() {
         running = false;

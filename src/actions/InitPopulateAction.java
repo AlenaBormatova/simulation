@@ -25,7 +25,7 @@ public final class InitPopulateAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap map, Random random, int turn) {
+    public void execute(WorldMap map, Random random) {
         int area = map.getArea();
 
         int rocks = density(area, ROCK_DENSITY_DIVISOR);
