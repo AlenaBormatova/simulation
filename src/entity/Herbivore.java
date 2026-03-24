@@ -17,21 +17,12 @@ public final class Herbivore extends Creature {
     private static final int REPRODUCTION_HP_COST = 20;
     private static final double REPRODUCTION_CHANCE = 0.05;
 
-    private final int maxHp;
-
     public Herbivore(int hp, int speed) {
         this(hp, hp, speed);
     }
 
     public Herbivore(int hp, int maxHp, int speed) {
-        super(hp, speed);
-        this.maxHp = Math.max(1, maxHp);
-        setHp(hp);
-    }
-
-    @Override
-    public void setHp(int hp) {
-        this.hp = Math.max(0, Math.min(maxHp, hp));
+        super(hp, maxHp, speed);
     }
 
     @Override
@@ -76,28 +67,23 @@ public final class Herbivore extends Creature {
         }
     }
 
-    private void tryReproduce(WorldMap map, Coordinates currentPosition, Random random) {
-        int currentHp = getHp();
-        int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
+    @Override
+    protected double getReproductionHpRatio() {
+        return REPRODUCTION_HP_RATIO;
+    }
 
-        if (currentHp < reproductionThreshold
-                || currentHp <= REPRODUCTION_HP_COST
-                || random.nextDouble() >= REPRODUCTION_CHANCE) {
-            return;
-        }
+    @Override
+    protected int getReproductionHpCost() {
+        return REPRODUCTION_HP_COST;
+    }
 
-        List<Coordinates> emptyNeighborPositions =
-                WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+    @Override
+    protected double getReproductionChance() {
+        return REPRODUCTION_CHANCE;
+    }
 
-        if (emptyNeighborPositions.isEmpty()) {
-            return;
-        }
-
-        Coordinates childSpawnPosition = emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-
-        Herbivore child = new Herbivore(maxHp, maxHp, speed);
-        if (map.placeEntity(childSpawnPosition, child)) {
-            setHp(getHp() - REPRODUCTION_HP_COST);
-        }
+    @Override
+    protected Creature createChild() {
+        return new Herbivore(maxHp, maxHp, speed);
     }
 }

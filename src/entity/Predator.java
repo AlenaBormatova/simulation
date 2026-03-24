@@ -18,18 +18,14 @@ public final class Predator extends Creature {
     private static final double REPRODUCTION_CHANCE = 0.30;
 
     private final int attack;
-    private final int maxHp;
 
     public Predator(int hp, int speed, int attack) {
-        super(hp, speed);
-        this.attack = attack;
-        this.maxHp = Math.max(1, hp);
-        setHp(hp);
+        this(hp, hp, speed, attack);
     }
 
-    @Override
-    public void setHp(int hp) {
-        this.hp = Math.max(0, Math.min(maxHp, hp));
+    public Predator(int hp, int maxHp, int speed, int attack) {
+        super(hp, maxHp, speed);
+        this.attack = attack;
     }
 
     @Override
@@ -90,28 +86,23 @@ public final class Predator extends Creature {
         map.moveEntity(currentPosition, destination);
     }
 
-    private void tryReproduce(WorldMap map, Coordinates currentPosition, Random random) {
-        int currentHp = getHp();
-        int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
+    @Override
+    protected double getReproductionHpRatio() {
+        return REPRODUCTION_HP_RATIO;
+    }
 
-        if (currentHp < reproductionThreshold
-                || currentHp <= REPRODUCTION_HP_COST
-                || random.nextDouble() >= REPRODUCTION_CHANCE) {
-            return;
-        }
+    @Override
+    protected int getReproductionHpCost() {
+        return REPRODUCTION_HP_COST;
+    }
 
-        List<Coordinates> emptyNeighborPositions =
-                WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+    @Override
+    protected double getReproductionChance() {
+        return REPRODUCTION_CHANCE;
+    }
 
-        if (emptyNeighborPositions.isEmpty()) {
-            return;
-        }
-
-        Coordinates childSpawnPosition = emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-
-        Predator child = new Predator(maxHp, speed, attack);
-        if (map.placeEntity(childSpawnPosition, child)) {
-            setHp(currentHp - REPRODUCTION_HP_COST);
-        }
+    @Override
+    protected Creature createChild() {
+        return new Predator(maxHp, maxHp, speed, attack);
     }
 }
