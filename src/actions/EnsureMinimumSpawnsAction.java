@@ -1,8 +1,5 @@
 package actions;
 
-import entity.Coordinates;
-import entity.Entity;
-import entity.Grass;
 import entity.Herbivore;
 import entity.Predator;
 import world.WorldMap;
@@ -14,137 +11,124 @@ public final class EnsureMinimumSpawnsAction implements Action {
 
     private static final int MAX_SPAWN_ATTEMPTS_PER_ENTITY = 3000;
 
-    private static final int MIN_GRASS_FLOOR = 1;
-    private static final int GRASS_SPAWN_CAP_PER_TURN = 20;
-    private static final int GRASS_MIN_BY_AREA_DIVISOR = 15;
-    private static final int GRASS_TARGET_BY_AREA_DIVISOR = 10;
-    private static final int GRASS_TARGET_PER_HERBIVORE_MULTIPLIER = 1;
+    private final SpawnBalanceConfig config;
+    private final SpawnEntityFactory entityFactory;
 
-    private static final int HERBIVORES_SPAWN_CAP_PER_TURN = 3;
-    private static final int HERBIVORE_MIN_DENSITY_DIVISOR = 35;
-    private static final int HERBIVORE_TARGET_DENSITY_DIVISOR = 25;
-    private static final int HERBIVORE_SPAWN_HP = 18;
-    private static final int HERBIVORE_SPAWN_SPEED = 2;
+    public EnsureMinimumSpawnsAction() {
+        this(SpawnBalanceConfig.DEFAULT);
+    }
 
-    private static final int PREDATORS_SPAWN_CAP_PER_TURN = 4;
-    private static final int PREDATOR_MIN_BY_AREA_DIVISOR = 100;
-    private static final int PREDATOR_TARGET_BY_AREA_DIVISOR = 70;
-    private static final int PREDATOR_MIN_BY_HERBIVORES_DIVISOR = 6;
-    private static final int PREDATOR_TARGET_BY_HERBIVORES_DIVISOR = 4;
-    private static final int PREDATOR_SPAWN_HP = 40;
-    private static final int PREDATOR_SPAWN_SPEED = 2;
-    private static final int PREDATOR_SPAWN_ATTACK = 8;
+    public EnsureMinimumSpawnsAction(SpawnBalanceConfig config) {
+        this(config, new SpawnEntityFactory(config));
+    }
+
+    EnsureMinimumSpawnsAction(SpawnBalanceConfig config,
+                              SpawnEntityFactory entityFactory) {
+        this.config = config;
+        this.entityFactory = entityFactory;
+    }
 
     @Override
     public void execute(WorldMap map, Random random, int turn) {
-        ensureGrass(map, random);
-        ensureHerbivores(map, random);
-        ensurePredators(map, random);
+        ensurePopulation(map, random, buildGrassSpawnPlan(map));
+        ensurePopulation(map, random, buildHerbivoreSpawnPlan(map));
+        ensurePopulation(map, random, buildPredatorSpawnPlan(map));
     }
 
-    private void ensureGrass(WorldMap map, Random random) {
-        int currentGrassCount = WorldMapStatistics.count(map, Grass.class);
-        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
-        int mapArea = map.getArea();
-
-        int minGrassByArea = Math.max(MIN_GRASS_FLOOR, mapArea / GRASS_MIN_BY_AREA_DIVISOR);
-        int minGrassCount = Math.max(minGrassByArea, herbivoreCount);
-
-        if (currentGrassCount >= minGrassCount) {
+    private void ensurePopulation(WorldMap map, Random random, SpawnPlan spawnPlan) {
+        if (spawnPlan.currentCount() >= spawnPlan.minimumCount()) {
             return;
         }
 
-        int targetGrassByArea = Math.max(MIN_GRASS_FLOOR, mapArea / GRASS_TARGET_BY_AREA_DIVISOR);
-        int targetGrassByHerbivores = herbivoreCount * GRASS_TARGET_PER_HERBIVORE_MULTIPLIER;
+        int missingCountToReachTarget = spawnPlan.targetCount() - spawnPlan.currentCount();
+        int spawnLimitThisTurn = Math.min(missingCountToReachTarget, spawnPlan.spawnCapPerTurn());
+
+        EntitySpawner.spawnUpTo(
+                map,
+                random,
+                spawnLimitThisTurn,
+                MAX_SPAWN_ATTEMPTS_PER_ENTITY,
+                spawnPlan.factory()
+        );
+    }
+
+    private SpawnPlan buildGrassSpawnPlan(WorldMap map) {
+        SpawnBalanceConfig.GrassSettings settings = config.grass();
+
+        int currentGrassCount = WorldMapStatistics.count(map, entity.Grass.class);
+        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
+        int mapArea = map.getArea();
+
+        int minimumGrassByArea = Math.max(settings.minimumFloor(), mapArea / settings.minimumByAreaDivisor());
+        int minimumGrassCount = Math.max(minimumGrassByArea, herbivoreCount);
+
+        int targetGrassByArea = Math.max(settings.minimumFloor(), mapArea / settings.targetByAreaDivisor());
+        int targetGrassByHerbivores = herbivoreCount * settings.targetPerHerbivoreMultiplier();
         int targetGrassCount = Math.max(targetGrassByArea, targetGrassByHerbivores);
-        targetGrassCount = Math.max(targetGrassCount, minGrassCount);
+        int desiredGrassCount = Math.max(targetGrassCount, minimumGrassCount);
 
-        int neededToTarget = targetGrassCount - currentGrassCount;
-        int toSpawnThisTurn = Math.min(neededToTarget, GRASS_SPAWN_CAP_PER_TURN);
-
-        for (int spawned = 0; spawned < toSpawnThisTurn; spawned++) {
-            if (!tryPlace(map, random, Grass::new)) {
-                break;
-            }
-        }
+        return new SpawnPlan(
+                currentGrassCount,
+                minimumGrassCount,
+                desiredGrassCount,
+                settings.spawnCapPerTurn(),
+                entityFactory::createGrass
+        );
     }
 
-    private void ensureHerbivores(WorldMap map, Random random) {
-        int mapArea = map.getArea();
+    private SpawnPlan buildHerbivoreSpawnPlan(WorldMap map) {
+        SpawnBalanceConfig.HerbivoreSettings settings = config.herbivores();
+
         int currentHerbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
+        int mapArea = map.getArea();
 
-        int minHerbivores = Math.max(1, mapArea / HERBIVORE_MIN_DENSITY_DIVISOR);
-        int targetHerbivores = Math.max(minHerbivores, mapArea / HERBIVORE_TARGET_DENSITY_DIVISOR);
+        int minimumHerbivoreCount = atLeastOne(mapArea / settings.minimumByAreaDivisor());
+        int targetHerbivoreCount = Math.max(minimumHerbivoreCount, mapArea / settings.targetByAreaDivisor());
 
-        if (currentHerbivoreCount >= minHerbivores) {
-            return;
-        }
-
-        int neededToTarget = targetHerbivores - currentHerbivoreCount;
-        int toSpawnThisTurn = Math.min(neededToTarget, HERBIVORES_SPAWN_CAP_PER_TURN);
-
-        for (int spawned = 0; spawned < toSpawnThisTurn; spawned++) {
-            if (!tryPlace(map, random, this::createHerbivore)) {
-                break;
-            }
-        }
+        return new SpawnPlan(
+                currentHerbivoreCount,
+                minimumHerbivoreCount,
+                targetHerbivoreCount,
+                settings.spawnCapPerTurn(),
+                entityFactory::createMinimumSpawnHerbivore
+        );
     }
 
-    private void ensurePredators(WorldMap map, Random random) {
-        int mapArea = map.getArea();
-        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
+    private SpawnPlan buildPredatorSpawnPlan(WorldMap map) {
+        SpawnBalanceConfig.PredatorSettings settings = config.predators();
+
         int currentPredatorCount = WorldMapStatistics.count(map, Predator.class, Predator::isAlive);
+        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
+        int mapArea = map.getArea();
 
-        int minPredatorsByArea = Math.max(1, mapArea / PREDATOR_MIN_BY_AREA_DIVISOR);
-        int minPredatorsByHerbivores = Math.max(1, herbivoreCount / PREDATOR_MIN_BY_HERBIVORES_DIVISOR);
-        int minPredators = Math.max(minPredatorsByArea, minPredatorsByHerbivores);
+        int minimumPredatorCountByArea = atLeastOne(mapArea / settings.minimumByAreaDivisor());
+        int minimumPredatorCountByFoodSupply = atLeastOne(herbivoreCount / settings.minimumByHerbivoresDivisor());
+        int minimumPredatorCount = Math.max(minimumPredatorCountByArea, minimumPredatorCountByFoodSupply);
 
-        int targetPredatorsByArea = Math.max(1, mapArea / PREDATOR_TARGET_BY_AREA_DIVISOR);
-        int targetPredatorsByHerbivores = Math.max(1, herbivoreCount / PREDATOR_TARGET_BY_HERBIVORES_DIVISOR);
-        int targetPredators = Math.max(
-                minPredators,
-                Math.min(targetPredatorsByArea, targetPredatorsByHerbivores)
+        int targetPredatorCountByArea = atLeastOne(mapArea / settings.targetByAreaDivisor());
+        int targetPredatorCountByFoodSupply = atLeastOne(herbivoreCount / settings.targetByHerbivoresDivisor());
+        int desiredPredatorCount = Math.max(
+                minimumPredatorCount,
+                Math.min(targetPredatorCountByArea, targetPredatorCountByFoodSupply)
         );
 
-        if (currentPredatorCount >= minPredators) {
-            return;
-        }
-
-        int neededToTarget = targetPredators - currentPredatorCount;
-        int toSpawnThisTurn = Math.min(neededToTarget, PREDATORS_SPAWN_CAP_PER_TURN);
-
-        for (int spawned = 0; spawned < toSpawnThisTurn; spawned++) {
-            if (!tryPlace(map, random, this::createPredator)) {
-                break;
-            }
-        }
+        return new SpawnPlan(
+                currentPredatorCount,
+                minimumPredatorCount,
+                desiredPredatorCount,
+                settings.spawnCapPerTurn(),
+                entityFactory::createMinimumSpawnPredator
+        );
     }
 
-    private Entity createHerbivore(Coordinates spawnPosition) {
-        return new Herbivore(spawnPosition, HERBIVORE_SPAWN_HP, HERBIVORE_SPAWN_SPEED);
+    private int atLeastOne(int value) {
+        return Math.max(1, value);
     }
 
-    private Entity createPredator(Coordinates spawnPosition) {
-        return new Predator(spawnPosition, PREDATOR_SPAWN_HP, PREDATOR_SPAWN_SPEED, PREDATOR_SPAWN_ATTACK);
-    }
-
-    private boolean tryPlace(WorldMap map, Random random, SpawnFactory factory) {
-        for (int attempt = 0; attempt < MAX_SPAWN_ATTEMPTS_PER_ENTITY; attempt++) {
-            Coordinates spawnPosition = new Coordinates(
-                    random.nextInt(map.getWidth()),
-                    random.nextInt(map.getHeight())
-            );
-
-            if (map.isEmpty(spawnPosition)) {
-                map.place(factory.create(spawnPosition));
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @FunctionalInterface
-    private interface SpawnFactory {
-        Entity create(Coordinates position);
+    private record SpawnPlan(int currentCount,
+                             int minimumCount,
+                             int targetCount,
+                             int spawnCapPerTurn,
+                             EntitySpawner.SpawnFactory factory) {
     }
 }
