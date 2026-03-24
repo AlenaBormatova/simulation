@@ -33,56 +33,64 @@ public final class Predator extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap map, Coordinates position, Random random) {
+    public void makeMove(WorldMap map, Coordinates currentPosition, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            map.remove(position);
+            map.remove(currentPosition);
             return;
         }
 
-        Optional<WorldMapNeighborhoods.Located<Herbivore>> adjacent =
+        Optional<WorldMapNeighborhoods.Positioned<Herbivore>> adjacentHerbivore =
                 WorldMapNeighborhoods.findAdjacent(
                         map,
-                        position,
+                        currentPosition,
                         Herbivore.class,
                         Herbivore::isAlive
                 );
 
-        if (adjacent.isPresent()) {
-            Herbivore target = adjacent.orElseThrow().entity();
-            Coordinates targetPosition = adjacent.orElseThrow().position();
+        if (adjacentHerbivore.isPresent()) {
+            WorldMapNeighborhoods.Positioned<Herbivore> target = adjacentHerbivore.orElseThrow();
+            Herbivore prey = target.entity();
 
-            target.setHp(target.getHp() - attack);
+            prey.setHp(prey.getHp() - attack);
 
-            if (!target.isAlive()) {
-                map.remove(targetPosition);
+            if (!prey.isAlive()) {
+                map.remove(target.position());
                 setHp(getHp() + HEAL_ON_KILL);
-                tryReproduce(map, position, random);
+                tryReproduce(map, currentPosition, random);
             }
             return;
         }
 
         List<Coordinates> path = PathFinder.findPathToNearest(
                 map,
-                position,
-                candidate -> WorldMapNeighborhoods.isAdjacentTo(map, candidate, Herbivore.class, Herbivore::isAlive)
+                currentPosition,
+                position -> WorldMapNeighborhoods.isAdjacentTo(
+                        map,
+                        position,
+                        Herbivore.class,
+                        Herbivore::isAlive
+                )
         );
 
         if (path.size() <= 1) {
-            List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, position);
-            if (!freeNeighbors.isEmpty()) {
-                Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
-                map.move(position, nextPosition);
+            List<Coordinates> emptyNeighborPositions =
+                    WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+
+            if (!emptyNeighborPositions.isEmpty()) {
+                Coordinates destination =
+                        emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
+                map.moveEntity(currentPosition, destination);
             }
             return;
         }
 
         int steps = Math.min(speed, path.size() - 1);
-        Coordinates newPosition = path.get(steps);
-        map.move(position, newPosition);
+        Coordinates destination = path.get(steps);
+        map.moveEntity(currentPosition, destination);
     }
 
-    private void tryReproduce(WorldMap map, Coordinates position, Random random) {
+    private void tryReproduce(WorldMap map, Coordinates currentPosition, Random random) {
         int currentHp = getHp();
         int reproductionThreshold = (int) Math.ceil(maxHp * REPRODUCTION_HP_RATIO);
 
@@ -92,15 +100,17 @@ public final class Predator extends Creature {
             return;
         }
 
-        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, position);
-        if (freeNeighborPositions.isEmpty()) {
+        List<Coordinates> emptyNeighborPositions =
+                WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+
+        if (emptyNeighborPositions.isEmpty()) {
             return;
         }
 
-        Coordinates childPosition = freeNeighborPositions.get(random.nextInt(freeNeighborPositions.size()));
+        Coordinates childSpawnPosition = emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
 
         Predator child = new Predator(maxHp, speed, attack);
-        if (map.place(childPosition, child)) {
+        if (map.placeEntity(childSpawnPosition, child)) {
             setHp(currentHp - REPRODUCTION_HP_COST);
         }
     }

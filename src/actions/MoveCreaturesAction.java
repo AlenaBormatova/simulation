@@ -11,10 +11,11 @@ public final class MoveCreaturesAction implements Action {
 
     @Override
     public void execute(WorldMap map, Random random) {
-        List<WorldMap.Occupant> snapshot = map.getOccupantsSnapshot();
+        List<WorldMap.PositionedEntity> positionedEntities =
+                map.getPositionedEntitiesSnapshot();
 
-        for (WorldMap.Occupant occupant : snapshot) {
-            Entity entity = occupant.entity();
+        for (WorldMap.PositionedEntity positionedEntity : positionedEntities) {
+            Entity entity = positionedEntity.entity();
 
             if (!(entity instanceof Creature creature)) {
                 continue;
@@ -24,11 +25,11 @@ public final class MoveCreaturesAction implements Action {
                 continue;
             }
 
-            if (map.get(occupant.position()) != creature) {
+            if (map.get(positionedEntity.position()) != creature) {
                 continue;
             }
 
-            creature.makeMove(map, occupant.position(), random);
+            creature.makeMove(map, positionedEntity.position(), random);
         }
     }
 }

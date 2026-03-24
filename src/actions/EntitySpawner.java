@@ -12,7 +12,7 @@ public final class EntitySpawner {
                                  Random random,
                                  int entitiesToSpawn,
                                  int maxAttemptsPerEntity,
-                                 SpawnFactory factory) {
+                                 EntityFactory factory) {
         for (int spawnedCount = 0; spawnedCount < entitiesToSpawn; spawnedCount++) {
             if (!tryPlace(map, random, maxAttemptsPerEntity, factory)) {
                 break;
@@ -23,7 +23,7 @@ public final class EntitySpawner {
     public static boolean tryPlace(WorldMap map,
                                    Random random,
                                    int maxAttempts,
-                                   SpawnFactory factory) {
+                                   EntityFactory factory) {
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             Coordinates spawnPosition = new Coordinates(
                     random.nextInt(map.getWidth()),
@@ -31,7 +31,7 @@ public final class EntitySpawner {
             );
 
             if (map.isEmpty(spawnPosition)) {
-                map.place(spawnPosition, factory.create());
+                map.placeEntity(spawnPosition, factory.create());
                 return true;
             }
         }
@@ -40,7 +40,7 @@ public final class EntitySpawner {
     }
 
     @FunctionalInterface
-    public interface SpawnFactory {
+    public interface EntityFactory {
         Entity create();
     }
 

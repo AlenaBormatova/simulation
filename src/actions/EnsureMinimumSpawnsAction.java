@@ -129,6 +129,6 @@ public final class EnsureMinimumSpawnsAction implements Action {
                              int minimumCount,
                              int targetCount,
                              int spawnCapPerTurn,
-                             EntitySpawner.SpawnFactory factory) {
+                             EntitySpawner.EntityFactory factory) {
     }
 }

@@ -1,6 +1,5 @@
 package actions;
 
-import entity.Coordinates;
 import entity.Grass;
 import entity.Herbivore;
 import entity.Predator;

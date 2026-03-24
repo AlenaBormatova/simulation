@@ -44,7 +44,7 @@ public final class InitPopulateAction implements Action {
     private void spawnMany(WorldMap map,
                            Random random,
                            int entityCount,
-                           EntitySpawner.SpawnFactory factory) {
+                           EntitySpawner.EntityFactory factory) {
         int maxAttempts = map.getArea() * MAX_PLACEMENT_ATTEMPTS_MULTIPLIER;
         EntitySpawner.spawnUpTo(map, random, entityCount, maxAttempts, factory);
     }

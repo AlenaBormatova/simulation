@@ -10,7 +10,7 @@ import java.util.Map;
 
 public final class WorldMap {
 
-    public record Occupant(Coordinates position, Entity entity) {
+    public record PositionedEntity(Coordinates position, Entity entity) {
     }
 
     private final Map<Coordinates, Entity> cells = new HashMap<>();
@@ -56,7 +56,7 @@ public final class WorldMap {
         return !cells.containsKey(position);
     }
 
-    public boolean place(Coordinates position, Entity entity) {
+    public boolean placeEntity(Coordinates position, Entity entity) {
         if (!isValid(position) || !isEmpty(position)) {
             return false;
         }
@@ -69,7 +69,7 @@ public final class WorldMap {
         cells.remove(position);
     }
 
-    public void move(Coordinates from, Coordinates to) {
+    public void moveEntity(Coordinates from, Coordinates to) {
         if (!isValid(from)) {
             throw new IllegalArgumentException("Invalid source: " + from);
         }
@@ -90,11 +90,11 @@ public final class WorldMap {
         cells.put(to, entity);
     }
 
-    public List<Occupant> getOccupantsSnapshot() {
-        List<Occupant> snapshot = new ArrayList<>(cells.size());
+    public List<PositionedEntity> getPositionedEntitiesSnapshot() {
+        List<PositionedEntity> snapshot = new ArrayList<>(cells.size());
 
         for (Map.Entry<Coordinates, Entity> entry : cells.entrySet()) {
-            snapshot.add(new Occupant(entry.getKey(), entry.getValue()));
+            snapshot.add(new PositionedEntity(entry.getKey(), entry.getValue()));
         }
 
         return snapshot;
