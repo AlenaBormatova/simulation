@@ -2,6 +2,7 @@ package path;
 
 import entity.Coordinates;
 import world.WorldMap;
+import world.WorldMapNeighborhoods;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ public final class PathFinder {
         while (!queue.isEmpty()) {
             Coordinates currentPosition = queue.poll();
 
-            for (Coordinates neighborPosition : map.neighbors8(currentPosition)) {
+            for (Coordinates neighborPosition : WorldMapNeighborhoods.neighbors8(map, currentPosition)) {
                 if (visited.contains(neighborPosition)) {
                     continue;
                 }
@@ -77,5 +78,6 @@ public final class PathFinder {
         return path;
     }
 
-    private PathFinder() {}
+    private PathFinder() {
+    }
 }

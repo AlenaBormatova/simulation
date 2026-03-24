@@ -3,15 +3,11 @@ package world;
 import entity.Coordinates;
 import entity.Creature;
 import entity.Entity;
-import entity.Grass;
-import entity.Herbivore;
-import entity.Predator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 public final class WorldMap {
 
@@ -94,106 +90,7 @@ public final class WorldMap {
         cells.put(destination, creature);
     }
 
-    public List<Creature> getAliveCreaturesSnapshot() {
-        List<Creature> creatures = new ArrayList<>();
-
-        for (Entity entity : cells.values()) {
-            if (entity instanceof Creature creature && creature.isAlive()) {
-                creatures.add(creature);
-            }
-        }
-        return creatures;
-    }
-
-    public List<Coordinates> neighbors8(Coordinates position) {
-        List<Coordinates> neighbors = new ArrayList<>(8);
-
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                if (dx == 0 && dy == 0) {
-                    continue;
-                }
-
-                Coordinates neighborPosition = new Coordinates(position.x + dx, position.y + dy);
-
-                if (isValid(neighborPosition)) {
-                    neighbors.add(neighborPosition);
-                }
-            }
-        }
-        return neighbors;
-    }
-
-    public List<Coordinates> freeNeighbors8(Coordinates position) {
-        List<Coordinates> freeNeighborPositions = new ArrayList<>();
-
-        for (Coordinates neighborPosition : neighbors8(position)) {
-            if (isEmpty(neighborPosition)) {
-                freeNeighborPositions.add(neighborPosition);
-            }
-        }
-        return freeNeighborPositions;
-    }
-
-    public Optional<Grass> findAdjacentGrass8(Coordinates position) {
-        for (Coordinates neighborPosition : neighbors8(position)) {
-            Entity neighborEntity = get(neighborPosition);
-
-            if (neighborEntity instanceof Grass grass) {
-                return Optional.of(grass);
-            }
-        }
-        return Optional.empty();
-    }
-
-    public Optional<Herbivore> findAdjacentHerbivore8(Coordinates position) {
-        for (Coordinates neighborPosition : neighbors8(position)) {
-            Entity neighborEntity = get(neighborPosition);
-
-            if (neighborEntity instanceof Herbivore herbivore && herbivore.isAlive()) {
-                return Optional.of(herbivore);
-            }
-        }
-        return Optional.empty();
-    }
-
-    public boolean isAdjacentToGrass8(Coordinates position) {
-        return findAdjacentGrass8(position).isPresent();
-    }
-
-    public boolean isAdjacentToAliveHerbivore8(Coordinates position) {
-        return findAdjacentHerbivore8(position).isPresent();
-    }
-
-    public int countGrass() {
-        int grassCount = 0;
-
-        for (Entity entity : cells.values()) {
-            if (entity instanceof Grass) {
-                grassCount++;
-            }
-        }
-        return grassCount;
-    }
-
-    public int countAliveHerbivores() {
-        int herbivoreCount = 0;
-
-        for (Entity entity : cells.values()) {
-            if (entity instanceof Herbivore herbivore && herbivore.isAlive()) {
-                herbivoreCount++;
-            }
-        }
-        return herbivoreCount;
-    }
-
-    public int countAlivePredators() {
-        int predatorCount = 0;
-        for (Entity entity : cells.values()) {
-            if (entity instanceof Predator predator && predator.isAlive()) {
-                predatorCount++;
-            }
-        }
-        return predatorCount;
+    public List<Entity> getEntitiesSnapshot() {
+        return new ArrayList<>(cells.values());
     }
 }

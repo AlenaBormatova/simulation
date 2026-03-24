@@ -6,6 +6,7 @@ import entity.Grass;
 import entity.Herbivore;
 import entity.Predator;
 import world.WorldMap;
+import world.WorldMapStatistics;
 
 import java.util.Random;
 
@@ -42,8 +43,8 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     private void ensureGrass(WorldMap map, Random random) {
-        int currentGrassCount = map.countGrass();
-        int herbivoreCount = map.countAliveHerbivores();
+        int currentGrassCount = WorldMapStatistics.count(map, Grass.class);
+        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
         int mapArea = map.getArea();
 
         int minGrassByArea = Math.max(MIN_GRASS_FLOOR, mapArea / GRASS_MIN_BY_AREA_DIVISOR);
@@ -70,7 +71,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
 
     private void ensureHerbivores(WorldMap map, Random random) {
         int mapArea = map.getArea();
-        int currentHerbivoreCount = map.countAliveHerbivores();
+        int currentHerbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
 
         int minHerbivores = Math.max(1, mapArea / HERBIVORE_MIN_DENSITY_DIVISOR);
         int targetHerbivores = Math.max(minHerbivores, mapArea / HERBIVORE_TARGET_DENSITY_DIVISOR);
@@ -91,8 +92,8 @@ public final class EnsureMinimumSpawnsAction implements Action {
 
     private void ensurePredators(WorldMap map, Random random) {
         int mapArea = map.getArea();
-        int herbivoreCount = map.countAliveHerbivores();
-        int currentPredatorCount = map.countAlivePredators();
+        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
+        int currentPredatorCount = WorldMapStatistics.count(map, Predator.class, Predator::isAlive);
 
         int minPredatorsByArea = Math.max(1, mapArea / PREDATOR_MIN_BY_AREA_DIVISOR);
         int minPredatorsByHerbivores = Math.max(1, herbivoreCount / PREDATOR_MIN_BY_HERBIVORES_DIVISOR);

@@ -2,6 +2,7 @@ package entity;
 
 import path.PathFinder;
 import world.WorldMap;
+import world.WorldMapNeighborhoods;
 
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,13 @@ public final class Predator extends Creature {
             return;
         }
 
-        Optional<Herbivore> adjacent = map.findAdjacentHerbivore8(getPosition());
+        Optional<Herbivore> adjacent = WorldMapNeighborhoods.findAdjacent(
+                map,
+                getPosition(),
+                Herbivore.class,
+                Herbivore::isAlive
+        );
+
         if (adjacent.isPresent()) {
             Herbivore adjacentHerbivore = adjacent.orElseThrow();
             adjacentHerbivore.setHp(adjacentHerbivore.getHp() - attack);
@@ -55,11 +62,11 @@ public final class Predator extends Creature {
         List<Coordinates> path = PathFinder.findPathToNearest(
                 map,
                 getPosition(),
-                map::isAdjacentToAliveHerbivore8
+                position -> WorldMapNeighborhoods.isAdjacentTo(map, position, Herbivore.class, Herbivore::isAlive)
         );
 
         if (path.size() <= 1) {
-            List<Coordinates> freeNeighbors = map.freeNeighbors8(getPosition());
+            List<Coordinates> freeNeighbors = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
             if (!freeNeighbors.isEmpty()) {
                 Coordinates nextPosition = freeNeighbors.get(random.nextInt(freeNeighbors.size()));
                 map.moveEntity(this, nextPosition);
@@ -82,7 +89,7 @@ public final class Predator extends Creature {
             return;
         }
 
-        List<Coordinates> freeNeighborPositions = map.freeNeighbors8(getPosition());
+        List<Coordinates> freeNeighborPositions = WorldMapNeighborhoods.freeNeighbors8(map, getPosition());
         if (freeNeighborPositions.isEmpty()) {
             return;
         }
