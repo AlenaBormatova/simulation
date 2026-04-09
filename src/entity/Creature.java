@@ -30,31 +30,38 @@ public abstract class Creature extends Entity {
         return hp > 0;
     }
 
-    public abstract void makeMove(WorldMap map, Coordinates position, Random random);
+    public abstract void makeMove(WorldMap worldMap, Coordinates position, Random random);
 
-    protected final void tryReproduce(WorldMap map, Coordinates currentPosition, Random random) {
-        int currentHp = getHp();
+    protected final boolean isReadyToReproduce() {
         int reproductionThreshold = (int) Math.ceil(maxHp * getReproductionHpRatio());
+        return getHp() >= reproductionThreshold && getHp() > getReproductionHpCost();
+    }
 
-        if (currentHp < reproductionThreshold
-                || currentHp <= getReproductionHpCost()
-                || random.nextDouble() >= getReproductionChance()) {
-            return;
+    protected final boolean hasEmptyNeighbor(WorldMap worldMap, Coordinates currentPosition) {
+        return !WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition).isEmpty();
+    }
+
+    protected final void reproduce(WorldMap worldMap, Coordinates currentPosition, Random random) {
+        if (!isReadyToReproduce()) {
+            throw new IllegalStateException("Creature is not ready to reproduce");
         }
 
         List<Coordinates> emptyNeighborPositions =
-                WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+                WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
 
         if (emptyNeighborPositions.isEmpty()) {
-            return;
+            throw new IllegalStateException("No empty neighbor cell for reproduction");
         }
 
         Coordinates childSpawnPosition = emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
 
         Creature child = createChild();
-        if (map.placeEntity(childSpawnPosition, child)) {
-            setHp(currentHp - getReproductionHpCost());
+
+        if (!worldMap.put(childSpawnPosition, child)) {
+            throw new IllegalStateException("Cannot place child at " + childSpawnPosition);
         }
+
+        setHp(getHp() - getReproductionHpCost());
     }
 
     protected abstract double getReproductionHpRatio();

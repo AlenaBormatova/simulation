@@ -10,7 +10,7 @@ import java.util.Random;
 
 public final class Simulation {
 
-    private final WorldMap map;
+    private final WorldMap worldMap;
     private final Renderer renderer;
     private final Random random;
 
@@ -20,8 +20,8 @@ public final class Simulation {
     private int turn = 0;
     private volatile boolean running = false;
 
-    public Simulation(WorldMap map, Renderer renderer, Random random) {
-        this.map = map;
+    public Simulation(WorldMap worldMap, Renderer renderer, Random random) {
+        this.worldMap = worldMap;
         this.renderer = renderer;
         this.random = random;
     }
@@ -36,18 +36,18 @@ public final class Simulation {
 
     public void init() {
         for (Action action : initActions) {
-            action.execute(map, random);
+            action.execute(worldMap, random);
         }
-        renderer.render(map, turn);
+        renderer.render(worldMap, turn);
     }
 
     public void nextTurn() {
         turn++;
 
         for (Action action : turnActions) {
-            action.execute(map, random);
+            action.execute(worldMap, random);
         }
-        renderer.render(map, turn);
+        renderer.render(worldMap, turn);
     }
 
     public void startSimulation(long delayMs) {

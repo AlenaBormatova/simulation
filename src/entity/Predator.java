@@ -29,16 +29,16 @@ public final class Predator extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap map, Coordinates currentPosition, Random random) {
+    public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            map.remove(currentPosition);
+            worldMap.remove(currentPosition);
             return;
         }
 
         Optional<WorldMapNeighborhoods.Positioned<Herbivore>> adjacentHerbivore =
                 WorldMapNeighborhoods.findAdjacent(
-                        map,
+                        worldMap,
                         currentPosition,
                         Herbivore.class,
                         Herbivore::isAlive
@@ -51,18 +51,22 @@ public final class Predator extends Creature {
             prey.setHp(prey.getHp() - attack);
 
             if (!prey.isAlive()) {
-                map.remove(target.position());
+                worldMap.remove(target.position());
                 setHp(getHp() + HEAL_ON_KILL);
-                tryReproduce(map, currentPosition, random);
+                if (isReadyToReproduce()
+                        && hasEmptyNeighbor(worldMap, currentPosition)
+                        && random.nextDouble() < getReproductionChance()) {
+                    reproduce(worldMap, currentPosition, random);
+                }
             }
             return;
         }
 
-        List<Coordinates> path = PathFinder.findPathToNearest(
-                map,
+        List<Coordinates> path = PathFinder.find(
+                worldMap,
                 currentPosition,
                 position -> WorldMapNeighborhoods.isAdjacentTo(
-                        map,
+                        worldMap,
                         position,
                         Herbivore.class,
                         Herbivore::isAlive
@@ -71,19 +75,19 @@ public final class Predator extends Creature {
 
         if (path.size() <= 1) {
             List<Coordinates> emptyNeighborPositions =
-                    WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+                    WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
 
             if (!emptyNeighborPositions.isEmpty()) {
                 Coordinates destination =
                         emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-                map.moveEntity(currentPosition, destination);
+                worldMap.moveEntity(currentPosition, destination);
             }
             return;
         }
 
         int steps = Math.min(speed, path.size() - 1);
         Coordinates destination = path.get(steps);
-        map.moveEntity(currentPosition, destination);
+        worldMap.moveEntity(currentPosition, destination);
     }
 
     @Override

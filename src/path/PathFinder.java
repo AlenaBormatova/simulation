@@ -4,23 +4,15 @@ import entity.Coordinates;
 import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 
 public final class PathFinder {
 
-    public static List<Coordinates> findPathToNearest(WorldMap map,
-                                                      Coordinates startPosition,
-                                                      Predicate<Coordinates> goalPredicate) {
-        if (!map.isValid(startPosition)) {
+    public static List<Coordinates> find(WorldMap worldMap,
+                                         Coordinates startPosition,
+                                         Predicate<Coordinates> goalPredicate) {
+        if (!worldMap.isValid(startPosition)) {
             return List.of();
         }
 
@@ -38,12 +30,12 @@ public final class PathFinder {
         while (!queue.isEmpty()) {
             Coordinates currentPosition = queue.poll();
 
-            for (Coordinates neighborPosition : WorldMapNeighborhoods.neighbors8(map, currentPosition)) {
+            for (Coordinates neighborPosition : WorldMapNeighborhoods.neighbors8(worldMap, currentPosition)) {
                 if (visited.contains(neighborPosition)) {
                     continue;
                 }
 
-                if (!map.isEmpty(neighborPosition)) {
+                if (!worldMap.isEmpty(neighborPosition)) {
                     continue;
                 }
 

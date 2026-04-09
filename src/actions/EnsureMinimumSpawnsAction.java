@@ -29,13 +29,13 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap map, Random random) {
-        ensurePopulation(map, random, buildGrassSpawnPlan(map));
-        ensurePopulation(map, random, buildHerbivoreSpawnPlan(map));
-        ensurePopulation(map, random, buildPredatorSpawnPlan(map));
+    public void execute(WorldMap worldMap, Random random) {
+        ensurePopulation(worldMap, random, buildGrassSpawnPlan(worldMap));
+        ensurePopulation(worldMap, random, buildHerbivoreSpawnPlan(worldMap));
+        ensurePopulation(worldMap, random, buildPredatorSpawnPlan(worldMap));
     }
 
-    private void ensurePopulation(WorldMap map, Random random, SpawnPlan spawnPlan) {
+    private void ensurePopulation(WorldMap worldMap, Random random, SpawnPlan spawnPlan) {
         if (spawnPlan.currentCount() >= spawnPlan.minimumCount()) {
             return;
         }
@@ -44,7 +44,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
         int spawnLimitThisTurn = Math.min(missingCountToReachTarget, spawnPlan.spawnCapPerTurn());
 
         EntitySpawner.spawnUpTo(
-                map,
+                worldMap,
                 random,
                 spawnLimitThisTurn,
                 MAX_SPAWN_ATTEMPTS_PER_ENTITY,
@@ -52,12 +52,12 @@ public final class EnsureMinimumSpawnsAction implements Action {
         );
     }
 
-    private SpawnPlan buildGrassSpawnPlan(WorldMap map) {
+    private SpawnPlan buildGrassSpawnPlan(WorldMap worldMap) {
         SpawnBalanceConfig.GrassSettings settings = config.grass();
 
-        int currentGrassCount = WorldMapStatistics.count(map, entity.Grass.class);
-        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
-        int mapArea = map.getArea();
+        int currentGrassCount = WorldMapStatistics.count(worldMap, entity.Grass.class);
+        int herbivoreCount = WorldMapStatistics.count(worldMap, Herbivore.class, Herbivore::isAlive);
+        int mapArea = worldMap.getArea();
 
         int minimumGrassByArea = Math.max(settings.minimumFloor(), mapArea / settings.minimumByAreaDivisor());
         int minimumGrassCount = Math.max(minimumGrassByArea, herbivoreCount);
@@ -76,11 +76,11 @@ public final class EnsureMinimumSpawnsAction implements Action {
         );
     }
 
-    private SpawnPlan buildHerbivoreSpawnPlan(WorldMap map) {
+    private SpawnPlan buildHerbivoreSpawnPlan(WorldMap worldMap) {
         SpawnBalanceConfig.HerbivoreSettings settings = config.herbivores();
 
-        int currentHerbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
-        int mapArea = map.getArea();
+        int currentHerbivoreCount = WorldMapStatistics.count(worldMap, Herbivore.class, Herbivore::isAlive);
+        int mapArea = worldMap.getArea();
 
         int minimumHerbivoreCount = atLeastOne(mapArea / settings.minimumByAreaDivisor());
         int targetHerbivoreCount = Math.max(minimumHerbivoreCount, mapArea / settings.targetByAreaDivisor());
@@ -94,12 +94,12 @@ public final class EnsureMinimumSpawnsAction implements Action {
         );
     }
 
-    private SpawnPlan buildPredatorSpawnPlan(WorldMap map) {
+    private SpawnPlan buildPredatorSpawnPlan(WorldMap worldMap) {
         SpawnBalanceConfig.PredatorSettings settings = config.predators();
 
-        int currentPredatorCount = WorldMapStatistics.count(map, Predator.class, Predator::isAlive);
-        int herbivoreCount = WorldMapStatistics.count(map, Herbivore.class, Herbivore::isAlive);
-        int mapArea = map.getArea();
+        int currentPredatorCount = WorldMapStatistics.count(worldMap, Predator.class, Predator::isAlive);
+        int herbivoreCount = WorldMapStatistics.count(worldMap, Herbivore.class, Herbivore::isAlive);
+        int mapArea = worldMap.getArea();
 
         int minimumPredatorCountByArea = atLeastOne(mapArea / settings.minimumByAreaDivisor());
         int minimumPredatorCountByFoodSupply = atLeastOne(herbivoreCount / settings.minimumByHerbivoresDivisor());

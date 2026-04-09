@@ -6,16 +6,16 @@ import java.util.function.Predicate;
 
 public final class WorldMapStatistics {
 
-    public static <T extends Entity> int count(WorldMap map, Class<T> type) {
-        return count(map, type, entity -> true);
+    public static <T extends Entity> int count(WorldMap worldMap, Class<T> type) {
+        return count(worldMap, type, entity -> true);
     }
 
-    public static <T extends Entity> int count(WorldMap map,
+    public static <T extends Entity> int count(WorldMap worldMap,
                                                Class<T> type,
                                                Predicate<T> filter) {
         int count = 0;
 
-        for (Entity entity : map.getEntitiesSnapshot()) {
+        for (Entity entity : worldMap.getEntities()) {
             if (!type.isInstance(entity)) {
                 continue;
             }

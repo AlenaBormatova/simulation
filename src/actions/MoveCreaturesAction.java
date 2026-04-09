@@ -10,9 +10,9 @@ import java.util.Random;
 public final class MoveCreaturesAction implements Action {
 
     @Override
-    public void execute(WorldMap map, Random random) {
+    public void execute(WorldMap worldMap, Random random) {
         List<WorldMap.PositionedEntity> positionedEntities =
-                map.getPositionedEntitiesSnapshot();
+                worldMap.getPositionedEntities();
 
         for (WorldMap.PositionedEntity positionedEntity : positionedEntities) {
             Entity entity = positionedEntity.entity();
@@ -25,11 +25,11 @@ public final class MoveCreaturesAction implements Action {
                 continue;
             }
 
-            if (map.get(positionedEntity.position()) != creature) {
+            if (worldMap.get(positionedEntity.position()) != creature) {
                 continue;
             }
 
-            creature.makeMove(map, positionedEntity.position(), random);
+            creature.makeMove(worldMap, positionedEntity.position(), random);
         }
     }
 }

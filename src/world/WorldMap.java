@@ -56,7 +56,7 @@ public final class WorldMap {
         return !cells.containsKey(position);
     }
 
-    public boolean placeEntity(Coordinates position, Entity entity) {
+    public boolean put(Coordinates position, Entity entity) {
         if (!isValid(position) || !isEmpty(position)) {
             return false;
         }
@@ -90,17 +90,17 @@ public final class WorldMap {
         cells.put(to, entity);
     }
 
-    public List<PositionedEntity> getPositionedEntitiesSnapshot() {
-        List<PositionedEntity> snapshot = new ArrayList<>(cells.size());
+    public List<PositionedEntity> getPositionedEntities() {
+        List<PositionedEntity> positionedEntities = new ArrayList<>(cells.size());
 
         for (Map.Entry<Coordinates, Entity> entry : cells.entrySet()) {
-            snapshot.add(new PositionedEntity(entry.getKey(), entry.getValue()));
+            positionedEntities.add(new PositionedEntity(entry.getKey(), entry.getValue()));
         }
 
-        return snapshot;
+        return positionedEntities;
     }
 
-    public List<Entity> getEntitiesSnapshot() {
+    public List<Entity> getEntities() {
         return new ArrayList<>(cells.values());
     }
 }

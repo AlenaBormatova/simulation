@@ -25,8 +25,8 @@ public final class InitPopulateAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap map, Random random) {
-        int area = map.getArea();
+    public void execute(WorldMap worldMap, Random random) {
+        int area = worldMap.getArea();
 
         int rocks = density(area, ROCK_DENSITY_DIVISOR);
         int trees = density(area, TREE_DENSITY_DIVISOR);
@@ -34,19 +34,19 @@ public final class InitPopulateAction implements Action {
         int herbivores = density(area, HERBIVORE_DENSITY_DIVISOR);
         int predators = density(area, PREDATOR_DENSITY_DIVISOR);
 
-        spawnMany(map, random, rocks, entityFactory::createRock);
-        spawnMany(map, random, trees, entityFactory::createTree);
-        spawnMany(map, random, grass, entityFactory::createGrass);
-        spawnMany(map, random, herbivores, entityFactory::createInitialHerbivore);
-        spawnMany(map, random, predators, entityFactory::createInitialPredator);
+        spawnMany(worldMap, random, rocks, entityFactory::createRock);
+        spawnMany(worldMap, random, trees, entityFactory::createTree);
+        spawnMany(worldMap, random, grass, entityFactory::createGrass);
+        spawnMany(worldMap, random, herbivores, entityFactory::createInitialHerbivore);
+        spawnMany(worldMap, random, predators, entityFactory::createInitialPredator);
     }
 
-    private void spawnMany(WorldMap map,
+    private void spawnMany(WorldMap worldMap,
                            Random random,
                            int entityCount,
                            EntitySpawner.EntityFactory factory) {
-        int maxAttempts = map.getArea() * MAX_PLACEMENT_ATTEMPTS_MULTIPLIER;
-        EntitySpawner.spawnUpTo(map, random, entityCount, maxAttempts, factory);
+        int maxAttempts = worldMap.getArea() * MAX_PLACEMENT_ATTEMPTS_MULTIPLIER;
+        EntitySpawner.spawnUpTo(worldMap, random, entityCount, maxAttempts, factory);
     }
 
     private int density(int area, int divisor) {

@@ -13,7 +13,7 @@ public final class WorldMapNeighborhoods {
     public record Positioned<T extends Entity>(Coordinates position, T entity) {
     }
 
-    public static List<Coordinates> neighbors8(WorldMap map, Coordinates center) {
+    public static List<Coordinates> neighbors8(WorldMap worldMap, Coordinates center) {
         List<Coordinates> neighbors = new ArrayList<>(8);
 
         for (int dx = -1; dx <= 1; dx++) {
@@ -23,7 +23,7 @@ public final class WorldMapNeighborhoods {
                 }
 
                 Coordinates neighborPosition = new Coordinates(center.x() + dx, center.y() + dy);
-                if (map.isValid(neighborPosition)) {
+                if (worldMap.isValid(neighborPosition)) {
                     neighbors.add(neighborPosition);
                 }
             }
@@ -31,29 +31,29 @@ public final class WorldMapNeighborhoods {
         return neighbors;
     }
 
-    public static List<Coordinates> emptyNeighbors8(WorldMap map, Coordinates center) {
+    public static List<Coordinates> emptyNeighbors8(WorldMap worldMap, Coordinates center) {
         List<Coordinates> emptyNeighbors = new ArrayList<>();
 
-        for (Coordinates neighborPosition : neighbors8(map, center)) {
-            if (map.isEmpty(neighborPosition)) {
+        for (Coordinates neighborPosition : neighbors8(worldMap, center)) {
+            if (worldMap.isEmpty(neighborPosition)) {
                 emptyNeighbors.add(neighborPosition);
             }
         }
         return emptyNeighbors;
     }
 
-    public static <T extends Entity> Optional<Positioned<T>> findAdjacent(WorldMap map,
+    public static <T extends Entity> Optional<Positioned<T>> findAdjacent(WorldMap worldMap,
                                                                           Coordinates center,
                                                                           Class<T> type) {
-        return findAdjacent(map, center, type, entity -> true);
+        return findAdjacent(worldMap, center, type, entity -> true);
     }
 
-    public static <T extends Entity> Optional<Positioned<T>> findAdjacent(WorldMap map,
+    public static <T extends Entity> Optional<Positioned<T>> findAdjacent(WorldMap worldMap,
                                                                           Coordinates center,
                                                                           Class<T> type,
                                                                           Predicate<T> filter) {
-        for (Coordinates neighborPosition : neighbors8(map, center)) {
-            Entity neighborEntity = map.get(neighborPosition);
+        for (Coordinates neighborPosition : neighbors8(worldMap, center)) {
+            Entity neighborEntity = worldMap.get(neighborPosition);
 
             if (!type.isInstance(neighborEntity)) {
                 continue;
@@ -67,17 +67,17 @@ public final class WorldMapNeighborhoods {
         return Optional.empty();
     }
 
-    public static <T extends Entity> boolean isAdjacentTo(WorldMap map,
+    public static <T extends Entity> boolean isAdjacentTo(WorldMap worldMap,
                                                           Coordinates center,
                                                           Class<T> type) {
-        return findAdjacent(map, center, type).isPresent();
+        return findAdjacent(worldMap, center, type).isPresent();
     }
 
-    public static <T extends Entity> boolean isAdjacentTo(WorldMap map,
+    public static <T extends Entity> boolean isAdjacentTo(WorldMap worldMap,
                                                           Coordinates center,
                                                           Class<T> type,
                                                           Predicate<T> filter) {
-        return findAdjacent(map, center, type, filter).isPresent();
+        return findAdjacent(worldMap, center, type, filter).isPresent();
     }
 
     private WorldMapNeighborhoods() {

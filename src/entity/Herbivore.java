@@ -26,44 +26,48 @@ public final class Herbivore extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap map, Coordinates currentPosition, Random random) {
+    public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            map.remove(currentPosition);
+            worldMap.remove(currentPosition);
             return;
         }
 
         Optional<WorldMapNeighborhoods.Positioned<Grass>> adjacentGrass =
-                WorldMapNeighborhoods.findAdjacent(map, currentPosition, Grass.class);
+                WorldMapNeighborhoods.findAdjacent(worldMap, currentPosition, Grass.class);
 
         if (adjacentGrass.isPresent()) {
             WorldMapNeighborhoods.Positioned<Grass> grassTarget = adjacentGrass.orElseThrow();
-            map.remove(grassTarget.position());
+            worldMap.remove(grassTarget.position());
             setHp(getHp() + HEAL_FROM_GRASS);
-            tryReproduce(map, currentPosition, random);
+            if (isReadyToReproduce()
+                    && hasEmptyNeighbor(worldMap, currentPosition)
+                    && random.nextDouble() < getReproductionChance()) {
+                reproduce(worldMap, currentPosition, random);
+            }
             return;
         }
 
-        List<Coordinates> path = PathFinder.findPathToNearest(
-                map,
+        List<Coordinates> path = PathFinder.find(
+                worldMap,
                 currentPosition,
-                position -> WorldMapNeighborhoods.isAdjacentTo(map, position, Grass.class)
+                position -> WorldMapNeighborhoods.isAdjacentTo(worldMap, position, Grass.class)
         );
 
         if (path.size() > 1) {
             int steps = Math.min(speed, path.size() - 1);
             Coordinates destination = path.get(steps);
-            map.moveEntity(currentPosition, destination);
+            worldMap.moveEntity(currentPosition, destination);
             return;
         }
 
         List<Coordinates> emptyNeighborPositions =
-                WorldMapNeighborhoods.emptyNeighbors8(map, currentPosition);
+                WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
 
         if (!emptyNeighborPositions.isEmpty()) {
             Coordinates destination =
                     emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-            map.moveEntity(currentPosition, destination);
+            worldMap.moveEntity(currentPosition, destination);
         }
     }
 

@@ -14,14 +14,14 @@ public final class ConsoleRenderer implements Renderer {
     }
 
     @Override
-    public void render(WorldMap map, int turn) {
+    public void render(WorldMap worldMap, int turn) {
         StringBuilder output = new StringBuilder();
 
         output.append("Turn: ").append(turn).append("\n");
 
-        for (int y = 0; y < map.getHeight(); y++) {
-            for (int x = 0; x < map.getWidth(); x++) {
-                Entity entity = map.get(x, y);
+        for (int y = 0; y < worldMap.getHeight(); y++) {
+            for (int x = 0; x < worldMap.getWidth(); x++) {
+                Entity entity = worldMap.get(x, y);
                 output.append(entity == null ? emptyGlyph : glyphSet.getGlyph(entity)).append(' ');
             }
             output.append('\n');

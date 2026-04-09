@@ -24,9 +24,9 @@ public final class Main {
         int width = readPositiveInt(scanner, "Введите ширину мира: ");
         int height = readPositiveInt(scanner, "Введите высоту мира: ");
 
-        WorldMap map = new WorldMap(width, height);
+        WorldMap worldMap = new WorldMap(width, height);
         ConsoleRenderer renderer = new ConsoleRenderer("⬛", new EmojiGlyphSet());
-        Simulation simulation = new Simulation(map, renderer, new Random(SEED));
+        Simulation simulation = new Simulation(worldMap, renderer, new Random(SEED));
 
         simulation.addInitAction(new InitPopulateAction());
         simulation.addTurnAction(new EnsureMinimumSpawnsAction());
