@@ -7,20 +7,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 public final class WorldMap {
-
-    public record PositionedEntity(Coordinates position, Entity entity) {
-    }
 
     private final Map<Coordinates, Entity> cells = new HashMap<>();
     private final int width;
     private final int height;
 
     public WorldMap(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            throw new IllegalArgumentException("Invalid map size");
-        }
+        validateMapSize(width, height);
         this.width = width;
         this.height = height;
     }
@@ -37,57 +34,59 @@ public final class WorldMap {
         return width * height;
     }
 
+    private static void validateMapSize(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            String message = "Invalid map size: width=%d, height=%d".formatted(width, height);
+            throw new IllegalArgumentException(message);
+        }
+    }
+
     public boolean isValid(Coordinates position) {
+        if (position == null) {
+            return false;
+        }
+
         return position.x() >= 0
                 && position.x() < width
                 && position.y() >= 0
                 && position.y() < height;
     }
 
-    public Entity get(Coordinates position) {
-        return cells.get(position);
+    public void validate(Coordinates position) {
+        Objects.requireNonNull(position, "Coordinates must not be null");
+
+        if (!isValid(position)) {
+            String message = "Coordinates %s are out of bounds for map %dx%d"
+                    .formatted(position, width, height);
+            throw new IndexOutOfBoundsException(message);
+        }
     }
 
-    public Entity get(int x, int y) {
-        return cells.get(new Coordinates(x, y));
+    public Optional<Entity> get(Coordinates position) {
+        validate(position);
+        return Optional.ofNullable(cells.get(position));
+    }
+
+    public Optional<Entity> get(int x, int y) {
+        return get(new Coordinates(x, y));
     }
 
     public boolean isEmpty(Coordinates position) {
+        validate(position);
         return !cells.containsKey(position);
     }
 
-    public boolean put(Coordinates position, Entity entity) {
-        if (!isValid(position) || !isEmpty(position)) {
-            return false;
+    public void placeEntity(Coordinates position, Entity entity) {
+        validate(position);
+        Objects.requireNonNull(entity, "Entity must not be null");
+
+        if (!isEmpty(position)) {
+            String message = "Cannot place %s at %s: cell is already occupied"
+                    .formatted(entity.getClass().getSimpleName(), position);
+            throw new IllegalStateException(message);
         }
 
         cells.put(position, entity);
-        return true;
-    }
-
-    public void remove(Coordinates position) {
-        cells.remove(position);
-    }
-
-    public void moveEntity(Coordinates from, Coordinates to) {
-        if (!isValid(from)) {
-            throw new IllegalArgumentException("Invalid source: " + from);
-        }
-
-        if (!isValid(to)) {
-            throw new IllegalArgumentException("Invalid destination: " + to);
-        }
-
-        if (isEmpty(from)) {
-            throw new IllegalStateException("No entity at source: " + from);
-        }
-
-        if (!isEmpty(to)) {
-            throw new IllegalStateException("Destination is occupied: " + to);
-        }
-
-        Entity entity = cells.remove(from);
-        cells.put(to, entity);
     }
 
     public List<PositionedEntity> getPositionedEntities() {
@@ -102,5 +101,20 @@ public final class WorldMap {
 
     public List<Entity> getEntities() {
         return new ArrayList<>(cells.values());
+    }
+
+    public void removeEntity(Coordinates position) {
+        validate(position);
+
+        if (isEmpty(position)) {
+            String message = "Cannot remove entity from %s: cell is already empty"
+                    .formatted(position);
+            throw new IllegalStateException(message);
+        }
+
+        cells.remove(position);
+    }
+
+    public record PositionedEntity(Coordinates position, Entity entity) {
     }
 }

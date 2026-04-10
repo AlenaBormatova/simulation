@@ -1,4 +1,4 @@
 package entity;
 
-public final class Tree extends Entity {
+public class Tree extends Entity {
 }

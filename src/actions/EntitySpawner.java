@@ -31,7 +31,7 @@ public final class EntitySpawner {
             );
 
             if (worldMap.isEmpty(spawnPosition)) {
-                worldMap.put(spawnPosition, factory.create());
+                worldMap.placeEntity(spawnPosition, factory.create());
                 return true;
             }
         }

@@ -57,11 +57,44 @@ public abstract class Creature extends Entity {
 
         Creature child = createChild();
 
-        if (!worldMap.put(childSpawnPosition, child)) {
-            throw new IllegalStateException("Cannot place child at " + childSpawnPosition);
+        worldMap.placeEntity(childSpawnPosition, child);
+        setHp(getHp() - getReproductionHpCost());
+    }
+
+    protected final void move(WorldMap worldMap, Coordinates from, Coordinates to) {
+        worldMap.validate(from);
+        worldMap.validate(to);
+
+        if (from.equals(to)) {
+            String message = "Cannot move %s: source and destination are the same %s"
+                    .formatted(getClass().getSimpleName(), from);
+            throw new IllegalArgumentException(message);
         }
 
-        setHp(getHp() - getReproductionHpCost());
+        Entity entityAtSource = worldMap.get(from).orElseThrow(() -> {
+            String message = "Cannot move %s from %s: source cell is empty"
+                    .formatted(getClass().getSimpleName(), from);
+            return new IllegalStateException(message);
+        });
+
+        if (entityAtSource != this) {
+            String message = "Cannot move %s from %s: source cell contains %s"
+                    .formatted(
+                            getClass().getSimpleName(),
+                            from,
+                            entityAtSource.getClass().getSimpleName()
+                    );
+            throw new IllegalStateException(message);
+        }
+
+        if (!worldMap.isEmpty(to)) {
+            String message = "Cannot move %s from %s to %s: destination cell is occupied"
+                    .formatted(getClass().getSimpleName(), from, to);
+            throw new IllegalStateException(message);
+        }
+
+        worldMap.removeEntity(from);
+        worldMap.placeEntity(to, this);
     }
 
     protected abstract double getReproductionHpRatio();

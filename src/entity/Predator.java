@@ -32,7 +32,7 @@ public final class Predator extends Creature {
     public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            worldMap.remove(currentPosition);
+            worldMap.removeEntity(currentPosition);
             return;
         }
 
@@ -51,7 +51,7 @@ public final class Predator extends Creature {
             prey.setHp(prey.getHp() - attack);
 
             if (!prey.isAlive()) {
-                worldMap.remove(target.position());
+                worldMap.removeEntity(target.position());
                 setHp(getHp() + HEAL_ON_KILL);
                 if (isReadyToReproduce()
                         && hasEmptyNeighbor(worldMap, currentPosition)
@@ -80,14 +80,14 @@ public final class Predator extends Creature {
             if (!emptyNeighborPositions.isEmpty()) {
                 Coordinates destination =
                         emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-                worldMap.moveEntity(currentPosition, destination);
+                move(worldMap, currentPosition, destination);
             }
             return;
         }
 
         int steps = Math.min(speed, path.size() - 1);
         Coordinates destination = path.get(steps);
-        worldMap.moveEntity(currentPosition, destination);
+        move(worldMap, currentPosition, destination);
     }
 
     @Override

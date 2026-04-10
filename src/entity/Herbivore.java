@@ -29,7 +29,7 @@ public final class Herbivore extends Creature {
     public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
-            worldMap.remove(currentPosition);
+            worldMap.removeEntity(currentPosition);
             return;
         }
 
@@ -38,7 +38,7 @@ public final class Herbivore extends Creature {
 
         if (adjacentGrass.isPresent()) {
             WorldMapNeighborhoods.Positioned<Grass> grassTarget = adjacentGrass.orElseThrow();
-            worldMap.remove(grassTarget.position());
+            worldMap.removeEntity(grassTarget.position());
             setHp(getHp() + HEAL_FROM_GRASS);
             if (isReadyToReproduce()
                     && hasEmptyNeighbor(worldMap, currentPosition)
@@ -57,7 +57,7 @@ public final class Herbivore extends Creature {
         if (path.size() > 1) {
             int steps = Math.min(speed, path.size() - 1);
             Coordinates destination = path.get(steps);
-            worldMap.moveEntity(currentPosition, destination);
+            move(worldMap, currentPosition, destination);
             return;
         }
 
@@ -67,7 +67,7 @@ public final class Herbivore extends Creature {
         if (!emptyNeighborPositions.isEmpty()) {
             Coordinates destination =
                     emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
-            worldMap.moveEntity(currentPosition, destination);
+            move(worldMap, currentPosition, destination);
         }
     }
 

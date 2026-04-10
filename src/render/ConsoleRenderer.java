@@ -3,6 +3,8 @@ package render;
 import entity.Entity;
 import world.WorldMap;
 
+import java.util.Optional;
+
 public final class ConsoleRenderer implements Renderer {
 
     private final String emptyGlyph;
@@ -21,8 +23,8 @@ public final class ConsoleRenderer implements Renderer {
 
         for (int y = 0; y < worldMap.getHeight(); y++) {
             for (int x = 0; x < worldMap.getWidth(); x++) {
-                Entity entity = worldMap.get(x, y);
-                output.append(entity == null ? emptyGlyph : glyphSet.getGlyph(entity)).append(' ');
+                Optional<Entity> entity = worldMap.get(x, y);
+                output.append(entity.map(glyphSet::getGlyph).orElse(emptyGlyph)).append(' ');
             }
             output.append('\n');
         }

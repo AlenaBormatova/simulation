@@ -5,6 +5,7 @@ import entity.Entity;
 import world.WorldMap;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 public final class MoveCreaturesAction implements Action {
@@ -25,7 +26,8 @@ public final class MoveCreaturesAction implements Action {
                 continue;
             }
 
-            if (worldMap.get(positionedEntity.position()) != creature) {
+            Optional<Entity> actualEntity = worldMap.get(positionedEntity.position());
+            if (actualEntity.isEmpty() || actualEntity.orElseThrow() != creature) {
                 continue;
             }
 

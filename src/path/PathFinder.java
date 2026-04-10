@@ -4,7 +4,15 @@ import entity.Coordinates;
 import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public final class PathFinder {
@@ -12,9 +20,7 @@ public final class PathFinder {
     public static List<Coordinates> find(WorldMap worldMap,
                                          Coordinates startPosition,
                                          Predicate<Coordinates> goalPredicate) {
-        if (!worldMap.isValid(startPosition)) {
-            return List.of();
-        }
+        worldMap.validate(startPosition);
 
         if (goalPredicate.test(startPosition)) {
             return List.of(startPosition);
@@ -29,13 +35,10 @@ public final class PathFinder {
 
         while (!queue.isEmpty()) {
             Coordinates currentPosition = queue.poll();
+            List<Coordinates> reachableNeighbors = findReachableNeighbors(worldMap, currentPosition);
 
-            for (Coordinates neighborPosition : WorldMapNeighborhoods.neighbors8(worldMap, currentPosition)) {
+            for (Coordinates neighborPosition : reachableNeighbors) {
                 if (visited.contains(neighborPosition)) {
-                    continue;
-                }
-
-                if (!worldMap.isEmpty(neighborPosition)) {
                     continue;
                 }
 
@@ -49,6 +52,19 @@ public final class PathFinder {
             }
         }
         return List.of();
+    }
+
+    private static List<Coordinates> findReachableNeighbors(WorldMap worldMap, Coordinates currentPosition) {
+        List<Coordinates> neighbors = WorldMapNeighborhoods.neighbors8(worldMap, currentPosition);
+        List<Coordinates> reachableNeighbors = new ArrayList<>();
+
+        for (Coordinates neighborPosition : neighbors) {
+            if (worldMap.isEmpty(neighborPosition)) {
+                reachableNeighbors.add(neighborPosition);
+            }
+        }
+
+        return reachableNeighbors;
     }
 
     private static List<Coordinates> reconstructPath(Map<Coordinates, Coordinates> parent,

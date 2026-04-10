@@ -10,10 +10,9 @@ import java.util.function.Predicate;
 
 public final class WorldMapNeighborhoods {
 
-    public record Positioned<T extends Entity>(Coordinates position, T entity) {
-    }
-
     public static List<Coordinates> neighbors8(WorldMap worldMap, Coordinates center) {
+        worldMap.validate(center);
+
         List<Coordinates> neighbors = new ArrayList<>(8);
 
         for (int dx = -1; dx <= 1; dx++) {
@@ -53,15 +52,13 @@ public final class WorldMapNeighborhoods {
                                                                           Class<T> type,
                                                                           Predicate<T> filter) {
         for (Coordinates neighborPosition : neighbors8(worldMap, center)) {
-            Entity neighborEntity = worldMap.get(neighborPosition);
+            Optional<T> typedNeighbor = worldMap.get(neighborPosition)
+                    .filter(type::isInstance)
+                    .map(type::cast)
+                    .filter(filter);
 
-            if (!type.isInstance(neighborEntity)) {
-                continue;
-            }
-
-            T typedEntity = type.cast(neighborEntity);
-            if (filter.test(typedEntity)) {
-                return Optional.of(new Positioned<>(neighborPosition, typedEntity));
+            if (typedNeighbor.isPresent()) {
+                return Optional.of(new Positioned<>(neighborPosition, typedNeighbor.orElseThrow()));
             }
         }
         return Optional.empty();
@@ -78,6 +75,9 @@ public final class WorldMapNeighborhoods {
                                                           Class<T> type,
                                                           Predicate<T> filter) {
         return findAdjacent(worldMap, center, type, filter).isPresent();
+    }
+
+    public record Positioned<T extends Entity>(Coordinates position, T entity) {
     }
 
     private WorldMapNeighborhoods() {

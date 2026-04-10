@@ -1,4 +1,4 @@
 package entity;
 
-public final class Rock extends Entity {
+public class Rock extends Entity {
 }
