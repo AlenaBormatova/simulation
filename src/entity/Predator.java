@@ -6,7 +6,7 @@ import world.WorldMapNeighborhoods;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class Predator extends Creature {
 
@@ -29,7 +29,9 @@ public final class Predator extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
+    public void makeMove(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
             worldMap.removeEntity(currentPosition);
@@ -53,12 +55,14 @@ public final class Predator extends Creature {
             if (!prey.isAlive()) {
                 worldMap.removeEntity(target.position());
                 setHp(getHp() + HEAL_ON_KILL);
+
                 if (isReadyToReproduce()
-                        && hasEmptyNeighbor(worldMap, currentPosition)
-                        && random.nextDouble() < getReproductionChance()) {
-                    reproduce(worldMap, currentPosition, random);
+                        && hasEmptyNeighbor(worldMap)
+                        && ThreadLocalRandom.current().nextDouble() < getReproductionChance()) {
+                    reproduce(worldMap);
                 }
             }
+
             return;
         }
 
@@ -78,8 +82,9 @@ public final class Predator extends Creature {
                     WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
 
             if (!emptyNeighborPositions.isEmpty()) {
-                Coordinates destination =
-                        emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
+                Coordinates destination = emptyNeighborPositions.get(
+                        ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size())
+                );
                 move(worldMap, currentPosition, destination);
             }
             return;

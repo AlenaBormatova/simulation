@@ -34,13 +34,6 @@ public final class WorldMap {
         return width * height;
     }
 
-    private static void validateMapSize(int width, int height) {
-        if (width <= 0 || height <= 0) {
-            String message = "Invalid map size: width=%d, height=%d".formatted(width, height);
-            throw new IllegalArgumentException(message);
-        }
-    }
-
     public boolean isValid(Coordinates position) {
         if (position == null) {
             return false;
@@ -89,6 +82,18 @@ public final class WorldMap {
         cells.put(position, entity);
     }
 
+    public Optional<Coordinates> findPositionOf(Entity entity) {
+        Objects.requireNonNull(entity, "Entity must not be null");
+
+        for (Map.Entry<Coordinates, Entity> entry : cells.entrySet()) {
+            if (entry.getValue() == entity) {
+                return Optional.of(entry.getKey());
+            }
+        }
+
+        return Optional.empty();
+    }
+
     public List<PositionedEntity> getPositionedEntities() {
         List<PositionedEntity> positionedEntities = new ArrayList<>(cells.size());
 
@@ -113,6 +118,13 @@ public final class WorldMap {
         }
 
         cells.remove(position);
+    }
+
+    private void validateMapSize(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            String message = "Invalid map size: width=%d, height=%d".formatted(width, height);
+            throw new IllegalArgumentException(message);
+        }
     }
 
     public record PositionedEntity(Coordinates position, Entity entity) {

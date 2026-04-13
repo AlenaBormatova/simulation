@@ -31,7 +31,7 @@ public final class MoveCreaturesAction implements Action {
                 continue;
             }
 
-            creature.makeMove(worldMap, positionedEntity.position(), random);
+            creature.makeMove(worldMap);
         }
     }
 }

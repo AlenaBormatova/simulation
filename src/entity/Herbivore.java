@@ -6,7 +6,7 @@ import world.WorldMapNeighborhoods;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class Herbivore extends Creature {
 
@@ -26,7 +26,9 @@ public final class Herbivore extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap worldMap, Coordinates currentPosition, Random random) {
+    public void makeMove(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+
         setHp(getHp() - METABOLISM_PER_TURN);
         if (!isAlive()) {
             worldMap.removeEntity(currentPosition);
@@ -40,11 +42,13 @@ public final class Herbivore extends Creature {
             WorldMapNeighborhoods.Positioned<Grass> grassTarget = adjacentGrass.orElseThrow();
             worldMap.removeEntity(grassTarget.position());
             setHp(getHp() + HEAL_FROM_GRASS);
+
             if (isReadyToReproduce()
-                    && hasEmptyNeighbor(worldMap, currentPosition)
-                    && random.nextDouble() < getReproductionChance()) {
-                reproduce(worldMap, currentPosition, random);
+                    && hasEmptyNeighbor(worldMap)
+                    && ThreadLocalRandom.current().nextDouble() < getReproductionChance()) {
+                reproduce(worldMap);
             }
+
             return;
         }
 
@@ -66,7 +70,7 @@ public final class Herbivore extends Creature {
 
         if (!emptyNeighborPositions.isEmpty()) {
             Coordinates destination =
-                    emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
+                    emptyNeighborPositions.get(ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size()));
             move(worldMap, currentPosition, destination);
         }
     }

@@ -4,18 +4,19 @@ import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Creature extends Entity {
 
-    protected int hp;
     protected final int maxHp;
     protected final int speed;
+    protected int hp;
 
     public Creature(int hp, int maxHp, int speed) {
-        this.maxHp = Math.max(1, maxHp);
+        validateCharacteristics(hp, maxHp, speed);
+        this.hp = hp;
+        this.maxHp = maxHp;
         this.speed = speed;
-        setHp(hp);
     }
 
     public int getHp() {
@@ -30,22 +31,31 @@ public abstract class Creature extends Entity {
         return hp > 0;
     }
 
-    public abstract void makeMove(WorldMap worldMap, Coordinates position, Random random);
+    public abstract void makeMove(WorldMap worldMap);
 
     protected final boolean isReadyToReproduce() {
         int reproductionThreshold = (int) Math.ceil(maxHp * getReproductionHpRatio());
-        return getHp() >= reproductionThreshold && getHp() > getReproductionHpCost();
+        return hp >= reproductionThreshold && hp > getReproductionHpCost();
     }
 
-    protected final boolean hasEmptyNeighbor(WorldMap worldMap, Coordinates currentPosition) {
+    protected final Coordinates getCurrentPosition(WorldMap worldMap) {
+        return worldMap.findPositionOf(this).orElseThrow(() -> {
+            String message = "%s is not placed on the map".formatted(getClass().getSimpleName());
+            return new IllegalStateException(message);
+        });
+    }
+
+    protected final boolean hasEmptyNeighbor(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
         return !WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition).isEmpty();
     }
 
-    protected final void reproduce(WorldMap worldMap, Coordinates currentPosition, Random random) {
+    protected final void reproduce(WorldMap worldMap) {
         if (!isReadyToReproduce()) {
             throw new IllegalStateException("Creature is not ready to reproduce");
         }
 
+        Coordinates currentPosition = getCurrentPosition(worldMap);
         List<Coordinates> emptyNeighborPositions =
                 WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
 
@@ -53,12 +63,14 @@ public abstract class Creature extends Entity {
             throw new IllegalStateException("No empty neighbor cell for reproduction");
         }
 
-        Coordinates childSpawnPosition = emptyNeighborPositions.get(random.nextInt(emptyNeighborPositions.size()));
+        Coordinates childSpawnPosition = emptyNeighborPositions.get(
+                ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size())
+        );
 
         Creature child = createChild();
 
         worldMap.placeEntity(childSpawnPosition, child);
-        setHp(getHp() - getReproductionHpCost());
+        setHp(hp - getReproductionHpCost());
     }
 
     protected final void move(WorldMap worldMap, Coordinates from, Coordinates to) {
@@ -104,4 +116,19 @@ public abstract class Creature extends Entity {
     protected abstract double getReproductionChance();
 
     protected abstract Creature createChild();
+
+    private void validateCharacteristics(int hp, int maxHp, int speed) {
+        if (maxHp <= 0) {
+            throw new IllegalArgumentException("maxHp must be greater than 0: " + maxHp);
+        }
+
+        if (hp <= 0 || hp > maxHp) {
+            String message = "hp must be in range [1, %d]: %d".formatted(maxHp, hp);
+            throw new IllegalArgumentException(message);
+        }
+
+        if (speed <= 0) {
+            throw new IllegalArgumentException("speed must be greater than 0: " + speed);
+        }
+    }
 }
