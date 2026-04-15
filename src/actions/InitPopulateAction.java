@@ -18,7 +18,7 @@ public final class InitPopulateAction implements Action {
     private final SpawnEntityFactory entityFactory;
 
     public InitPopulateAction() {
-        this(new SpawnEntityFactory());
+        this(new DefaultSpawnEntityFactory());
     }
 
     InitPopulateAction(SpawnEntityFactory entityFactory) {
@@ -39,8 +39,8 @@ public final class InitPopulateAction implements Action {
         spawnMany(worldMap, random, rocks, entityFactory::createRock);
         spawnMany(worldMap, random, trees, entityFactory::createTree);
         spawnMany(worldMap, random, grass, entityFactory::createGrass);
-        spawnMany(worldMap, random, herbivores, entityFactory::createInitialHerbivore);
-        spawnMany(worldMap, random, predators, entityFactory::createInitialPredator);
+        spawnMany(worldMap, random, herbivores, entityFactory::createHerbivore);
+        spawnMany(worldMap, random, predators, entityFactory::createPredator);
     }
 
     private void spawnMany(WorldMap worldMap,

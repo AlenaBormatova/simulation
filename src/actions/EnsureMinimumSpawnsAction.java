@@ -20,7 +20,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     public EnsureMinimumSpawnsAction(SpawnBalanceConfig config) {
-        this(config, new SpawnEntityFactory(config));
+        this(config, new ConfiguredSpawnEntityFactory(config));
     }
 
     EnsureMinimumSpawnsAction(SpawnBalanceConfig config,
@@ -93,7 +93,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
                 minimumHerbivoreCount,
                 targetHerbivoreCount,
                 settings.spawnCapPerTurn(),
-                entityFactory::createMinimumSpawnHerbivore
+                entityFactory::createHerbivore
         );
     }
 
@@ -120,7 +120,7 @@ public final class EnsureMinimumSpawnsAction implements Action {
                 minimumPredatorCount,
                 desiredPredatorCount,
                 settings.spawnCapPerTurn(),
-                entityFactory::createMinimumSpawnPredator
+                entityFactory::createPredator
         );
     }
 
