@@ -16,10 +16,8 @@ public final class ConsoleRenderer implements Renderer {
     }
 
     @Override
-    public void render(WorldMap worldMap, int turn) {
+    public void render(WorldMap worldMap) {
         StringBuilder output = new StringBuilder();
-
-        output.append("Turn: ").append(turn).append("\n");
 
         for (int y = 0; y < worldMap.getHeight(); y++) {
             for (int x = 0; x < worldMap.getWidth(); x++) {

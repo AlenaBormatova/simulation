@@ -35,7 +35,9 @@ public final class Simulation {
         for (Action action : initActions) {
             action.execute(worldMap);
         }
-        renderer.render(worldMap, turn);
+
+        printTurnHeader();
+        renderer.render(worldMap);
     }
 
     public void nextTurn() {
@@ -44,7 +46,9 @@ public final class Simulation {
         for (Action action : turnActions) {
             action.execute(worldMap);
         }
-        renderer.render(worldMap, turn);
+
+        printTurnHeader();
+        renderer.render(worldMap);
     }
 
     public void startSimulation(long delayMs) {
@@ -68,5 +72,9 @@ public final class Simulation {
 
     public void stopSimulation() {
         running = false;
+    }
+
+    private void printTurnHeader() {
+        System.out.println("Turn: " + turn);
     }
 }
