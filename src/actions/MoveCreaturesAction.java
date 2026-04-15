@@ -6,12 +6,11 @@ import world.WorldMap;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 public final class MoveCreaturesAction implements Action {
 
     @Override
-    public void execute(WorldMap worldMap, Random random) {
+    public void execute(WorldMap worldMap) {
         List<WorldMap.PositionedEntity> positionedEntities =
                 worldMap.getPositionedEntities();
 

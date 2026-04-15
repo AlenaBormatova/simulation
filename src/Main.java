@@ -6,7 +6,6 @@ import render.EmojiGlyphSet;
 import sim.Simulation;
 import world.WorldMap;
 
-import java.util.Random;
 import java.util.Scanner;
 
 public final class Main {
@@ -17,7 +16,6 @@ public final class Main {
     public static final int STOP_CONTINUOUS = 4;
 
     private static final long DEFAULT_DELAY_MS = 1000;
-    private static final long SEED = 42;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -26,7 +24,7 @@ public final class Main {
 
         WorldMap worldMap = new WorldMap(width, height);
         ConsoleRenderer renderer = new ConsoleRenderer("⬛", new EmojiGlyphSet());
-        Simulation simulation = new Simulation(worldMap, renderer, new Random(SEED));
+        Simulation simulation = new Simulation(worldMap, renderer);
 
         simulation.addInitAction(new InitPopulateAction());
         simulation.addTurnAction(new EnsureMinimumSpawnsAction());

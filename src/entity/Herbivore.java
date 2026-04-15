@@ -1,14 +1,9 @@
 package entity;
 
-import path.PathFinder;
 import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-
-public final class Herbivore extends Creature {
+public class Herbivore extends Creature {
 
     private static final int METABOLISM_PER_TURN = 1;
     private static final int HEAL_FROM_GRASS = 6;
@@ -26,53 +21,31 @@ public final class Herbivore extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap worldMap) {
+    protected int getMetabolismPerTurn() {
+        return METABOLISM_PER_TURN;
+    }
+
+    @Override
+    protected boolean hasAdjacentFood(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+        return WorldMapNeighborhoods.findAdjacent(worldMap, currentPosition, Grass.class).isPresent();
+    }
+
+    @Override
+    protected void eatAdjacentFood(WorldMap worldMap) {
         Coordinates currentPosition = getCurrentPosition(worldMap);
 
-        setHp(getHp() - METABOLISM_PER_TURN);
-        if (!isAlive()) {
-            worldMap.removeEntity(currentPosition);
-            return;
-        }
+        WorldMapNeighborhoods.Positioned<Grass> grassTarget =
+                WorldMapNeighborhoods.findAdjacent(worldMap, currentPosition, Grass.class)
+                        .orElseThrow(() -> new IllegalStateException("Adjacent grass not found"));
 
-        Optional<WorldMapNeighborhoods.Positioned<Grass>> adjacentGrass =
-                WorldMapNeighborhoods.findAdjacent(worldMap, currentPosition, Grass.class);
+        worldMap.removeEntity(grassTarget.position());
+        setHp(getHp() + HEAL_FROM_GRASS);
+    }
 
-        if (adjacentGrass.isPresent()) {
-            WorldMapNeighborhoods.Positioned<Grass> grassTarget = adjacentGrass.orElseThrow();
-            worldMap.removeEntity(grassTarget.position());
-            setHp(getHp() + HEAL_FROM_GRASS);
-
-            if (isReadyToReproduce()
-                    && hasEmptyNeighbor(worldMap)
-                    && ThreadLocalRandom.current().nextDouble() < getReproductionChance()) {
-                reproduce(worldMap);
-            }
-
-            return;
-        }
-
-        List<Coordinates> path = PathFinder.find(
-                worldMap,
-                currentPosition,
-                position -> WorldMapNeighborhoods.isAdjacentTo(worldMap, position, Grass.class)
-        );
-
-        if (path.size() > 1) {
-            int steps = Math.min(speed, path.size() - 1);
-            Coordinates destination = path.get(steps);
-            move(worldMap, currentPosition, destination);
-            return;
-        }
-
-        List<Coordinates> emptyNeighborPositions =
-                WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
-
-        if (!emptyNeighborPositions.isEmpty()) {
-            Coordinates destination =
-                    emptyNeighborPositions.get(ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size()));
-            move(worldMap, currentPosition, destination);
-        }
+    @Override
+    protected boolean isFoodAdjacent(WorldMap worldMap, Coordinates position) {
+        return WorldMapNeighborhoods.isAdjacentTo(worldMap, position, Grass.class);
     }
 
     @Override

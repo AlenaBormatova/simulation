@@ -1,14 +1,9 @@
 package entity;
 
-import path.PathFinder;
 import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-
-public final class Predator extends Creature {
+public class Predator extends Creature {
 
     private static final int METABOLISM_PER_TURN = 2;
     private static final int HEAL_ON_KILL = 18;
@@ -29,70 +24,51 @@ public final class Predator extends Creature {
     }
 
     @Override
-    public void makeMove(WorldMap worldMap) {
+    protected int getMetabolismPerTurn() {
+        return METABOLISM_PER_TURN;
+    }
+
+    @Override
+    protected boolean hasAdjacentFood(WorldMap worldMap) {
         Coordinates currentPosition = getCurrentPosition(worldMap);
 
-        setHp(getHp() - METABOLISM_PER_TURN);
-        if (!isAlive()) {
-            worldMap.removeEntity(currentPosition);
-            return;
-        }
+        return WorldMapNeighborhoods.findAdjacent(
+                worldMap,
+                currentPosition,
+                Herbivore.class,
+                Herbivore::isAlive
+        ).isPresent();
+    }
 
-        Optional<WorldMapNeighborhoods.Positioned<Herbivore>> adjacentHerbivore =
+    @Override
+    protected void eatAdjacentFood(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+
+        WorldMapNeighborhoods.Positioned<Herbivore> target =
                 WorldMapNeighborhoods.findAdjacent(
                         worldMap,
                         currentPosition,
                         Herbivore.class,
                         Herbivore::isAlive
-                );
+                ).orElseThrow(() -> new IllegalStateException("Adjacent herbivore not found"));
 
-        if (adjacentHerbivore.isPresent()) {
-            WorldMapNeighborhoods.Positioned<Herbivore> target = adjacentHerbivore.orElseThrow();
-            Herbivore prey = target.entity();
+        Herbivore prey = target.entity();
+        prey.setHp(prey.getHp() - attack);
 
-            prey.setHp(prey.getHp() - attack);
-
-            if (!prey.isAlive()) {
-                worldMap.removeEntity(target.position());
-                setHp(getHp() + HEAL_ON_KILL);
-
-                if (isReadyToReproduce()
-                        && hasEmptyNeighbor(worldMap)
-                        && ThreadLocalRandom.current().nextDouble() < getReproductionChance()) {
-                    reproduce(worldMap);
-                }
-            }
-
-            return;
+        if (!prey.isAlive()) {
+            worldMap.removeEntity(target.position());
+            setHp(getHp() + HEAL_ON_KILL);
         }
+    }
 
-        List<Coordinates> path = PathFinder.find(
+    @Override
+    protected boolean isFoodAdjacent(WorldMap worldMap, Coordinates position) {
+        return WorldMapNeighborhoods.isAdjacentTo(
                 worldMap,
-                currentPosition,
-                position -> WorldMapNeighborhoods.isAdjacentTo(
-                        worldMap,
-                        position,
-                        Herbivore.class,
-                        Herbivore::isAlive
-                )
+                position,
+                Herbivore.class,
+                Herbivore::isAlive
         );
-
-        if (path.size() <= 1) {
-            List<Coordinates> emptyNeighborPositions =
-                    WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
-
-            if (!emptyNeighborPositions.isEmpty()) {
-                Coordinates destination = emptyNeighborPositions.get(
-                        ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size())
-                );
-                move(worldMap, currentPosition, destination);
-            }
-            return;
-        }
-
-        int steps = Math.min(speed, path.size() - 1);
-        Coordinates destination = path.get(steps);
-        move(worldMap, currentPosition, destination);
     }
 
     @Override

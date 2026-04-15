@@ -3,6 +3,7 @@ package actions;
 import world.WorldMap;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class InitPopulateAction implements Action {
 
@@ -25,7 +26,8 @@ public final class InitPopulateAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap worldMap, Random random) {
+    public void execute(WorldMap worldMap) {
+        Random random = ThreadLocalRandom.current();
         int area = worldMap.getArea();
 
         int rocks = density(area, ROCK_DENSITY_DIVISOR);

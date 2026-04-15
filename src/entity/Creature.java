@@ -1,5 +1,6 @@
 package entity;
 
+import path.PathFinder;
 import world.WorldMap;
 import world.WorldMapNeighborhoods;
 
@@ -31,11 +32,42 @@ public abstract class Creature extends Entity {
         return hp > 0;
     }
 
-    public abstract void makeMove(WorldMap worldMap);
+    public final void makeMove(WorldMap worldMap) {
+        spendEnergy();
 
-    protected final boolean isReadyToReproduce() {
-        int reproductionThreshold = (int) Math.ceil(maxHp * getReproductionHpRatio());
-        return hp >= reproductionThreshold && hp > getReproductionHpCost();
+        if (!isAlive()) {
+            die(worldMap);
+            return;
+        }
+
+        if (hasAdjacentFood(worldMap)) {
+            eatAdjacentFood(worldMap);
+
+            if (canReproduce(worldMap)) {
+                reproduce(worldMap);
+            }
+            return;
+        }
+
+        List<Coordinates> path = findPathToFood(worldMap);
+
+        if (path.size() > 1) {
+            moveAlongPath(worldMap, path);
+            return;
+        }
+
+        if (hasEmptyNeighbor(worldMap)) {
+            moveRandomly(worldMap);
+        }
+    }
+
+    protected final void spendEnergy() {
+        setHp(getHp() - getMetabolismPerTurn());
+    }
+
+    protected final void die(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+        worldMap.removeEntity(currentPosition);
     }
 
     protected final Coordinates getCurrentPosition(WorldMap worldMap) {
@@ -48,6 +80,17 @@ public abstract class Creature extends Entity {
     protected final boolean hasEmptyNeighbor(WorldMap worldMap) {
         Coordinates currentPosition = getCurrentPosition(worldMap);
         return !WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition).isEmpty();
+    }
+
+    protected final boolean canReproduce(WorldMap worldMap) {
+        return isReadyToReproduce()
+                && hasEmptyNeighbor(worldMap)
+                && ThreadLocalRandom.current().nextDouble() < getReproductionChance();
+    }
+
+    protected final boolean isReadyToReproduce() {
+        int reproductionThreshold = (int) Math.ceil(maxHp * getReproductionHpRatio());
+        return hp >= reproductionThreshold && hp > getReproductionHpCost();
     }
 
     protected final void reproduce(WorldMap worldMap) {
@@ -71,6 +114,44 @@ public abstract class Creature extends Entity {
 
         worldMap.placeEntity(childSpawnPosition, child);
         setHp(hp - getReproductionHpCost());
+    }
+
+    protected final List<Coordinates> findPathToFood(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+
+        return PathFinder.find(
+                worldMap,
+                currentPosition,
+                position -> isFoodAdjacent(worldMap, position)
+        );
+    }
+
+    protected final void moveAlongPath(WorldMap worldMap, List<Coordinates> path) {
+        if (path.size() <= 1) {
+            throw new IllegalArgumentException("Path must contain at least 2 positions");
+        }
+
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+        int steps = Math.min(speed, path.size() - 1);
+        Coordinates destination = path.get(steps);
+
+        move(worldMap, currentPosition, destination);
+    }
+
+    protected final void moveRandomly(WorldMap worldMap) {
+        Coordinates currentPosition = getCurrentPosition(worldMap);
+        List<Coordinates> emptyNeighborPositions =
+                WorldMapNeighborhoods.emptyNeighbors8(worldMap, currentPosition);
+
+        if (emptyNeighborPositions.isEmpty()) {
+            throw new IllegalStateException("No empty neighbor cell for movement");
+        }
+
+        Coordinates destination = emptyNeighborPositions.get(
+                ThreadLocalRandom.current().nextInt(emptyNeighborPositions.size())
+        );
+
+        move(worldMap, currentPosition, destination);
     }
 
     protected final void move(WorldMap worldMap, Coordinates from, Coordinates to) {
@@ -108,6 +189,14 @@ public abstract class Creature extends Entity {
         worldMap.removeEntity(from);
         worldMap.placeEntity(to, this);
     }
+
+    protected abstract int getMetabolismPerTurn();
+
+    protected abstract boolean hasAdjacentFood(WorldMap worldMap);
+
+    protected abstract void eatAdjacentFood(WorldMap worldMap);
+
+    protected abstract boolean isFoodAdjacent(WorldMap worldMap, Coordinates position);
 
     protected abstract double getReproductionHpRatio();
 

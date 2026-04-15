@@ -6,6 +6,7 @@ import world.WorldMap;
 import world.WorldMapStatistics;
 
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class EnsureMinimumSpawnsAction implements Action {
 
@@ -29,7 +30,9 @@ public final class EnsureMinimumSpawnsAction implements Action {
     }
 
     @Override
-    public void execute(WorldMap worldMap, Random random) {
+    public void execute(WorldMap worldMap) {
+        Random random = ThreadLocalRandom.current();
+
         ensurePopulation(worldMap, random, buildGrassSpawnPlan(worldMap));
         ensurePopulation(worldMap, random, buildHerbivoreSpawnPlan(worldMap));
         ensurePopulation(worldMap, random, buildPredatorSpawnPlan(worldMap));

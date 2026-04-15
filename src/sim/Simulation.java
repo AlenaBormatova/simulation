@@ -6,13 +6,11 @@ import world.WorldMap;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public final class Simulation {
 
     private final WorldMap worldMap;
     private final Renderer renderer;
-    private final Random random;
 
     private final List<Action> initActions = new ArrayList<>();
     private final List<Action> turnActions = new ArrayList<>();
@@ -20,10 +18,9 @@ public final class Simulation {
     private int turn = 0;
     private volatile boolean running = false;
 
-    public Simulation(WorldMap worldMap, Renderer renderer, Random random) {
+    public Simulation(WorldMap worldMap, Renderer renderer) {
         this.worldMap = worldMap;
         this.renderer = renderer;
-        this.random = random;
     }
 
     public void addInitAction(Action a) {
@@ -36,7 +33,7 @@ public final class Simulation {
 
     public void init() {
         for (Action action : initActions) {
-            action.execute(worldMap, random);
+            action.execute(worldMap);
         }
         renderer.render(worldMap, turn);
     }
@@ -45,7 +42,7 @@ public final class Simulation {
         turn++;
 
         for (Action action : turnActions) {
-            action.execute(worldMap, random);
+            action.execute(worldMap);
         }
         renderer.render(worldMap, turn);
     }
