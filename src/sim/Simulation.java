@@ -11,33 +11,19 @@ public final class Simulation {
 
     private final WorldMap worldMap;
     private final Renderer renderer;
-
-    private final List<Action> initActions = new ArrayList<>();
-    private final List<Action> turnActions = new ArrayList<>();
+    private final List<Action> initActions;
+    private final List<Action> turnActions;
 
     private int turn = 0;
     private volatile boolean running = false;
 
-    public Simulation(WorldMap worldMap, Renderer renderer) {
-        this.worldMap = worldMap;
-        this.renderer = renderer;
-    }
+    private Simulation(Builder builder) {
+        this.worldMap = builder.worldMap;
+        this.renderer = builder.renderer;
+        this.initActions = List.copyOf(builder.initActions);
+        this.turnActions = List.copyOf(builder.turnActions);
 
-    public void addInitAction(Action a) {
-        initActions.add(a);
-    }
-
-    public void addTurnAction(Action a) {
-        turnActions.add(a);
-    }
-
-    public void init() {
-        for (Action action : initActions) {
-            action.execute(worldMap);
-        }
-
-        printTurnHeader();
-        renderer.render(worldMap);
+        init();
     }
 
     public void nextTurn() {
@@ -72,6 +58,41 @@ public final class Simulation {
 
     public void stopSimulation() {
         running = false;
+    }
+
+    private void init() {
+        for (Action action : initActions) {
+            action.execute(worldMap);
+        }
+
+        printTurnHeader();
+        renderer.render(worldMap);
+    }
+
+    public static final class Builder {
+        private final WorldMap worldMap;
+        private final Renderer renderer;
+        private final List<Action> initActions = new ArrayList<>();
+        private final List<Action> turnActions = new ArrayList<>();
+
+        public Builder(WorldMap worldMap, Renderer renderer) {
+            this.worldMap = worldMap;
+            this.renderer = renderer;
+        }
+
+        public Builder addInitAction(Action action) {
+            initActions.add(action);
+            return this;
+        }
+
+        public Builder addTurnAction(Action action) {
+            turnActions.add(action);
+            return this;
+        }
+
+        public Simulation build() {
+            return new Simulation(this);
+        }
     }
 
     private void printTurnHeader() {

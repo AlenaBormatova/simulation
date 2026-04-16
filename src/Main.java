@@ -24,13 +24,11 @@ public final class Main {
 
         WorldMap worldMap = new WorldMap(width, height);
         ConsoleRenderer renderer = new ConsoleRenderer("⬛", new EmojiGlyphSet());
-        Simulation simulation = new Simulation(worldMap, renderer);
-
-        simulation.addInitAction(new InitPopulateAction());
-        simulation.addTurnAction(new EnsureMinimumSpawnsAction());
-        simulation.addTurnAction(new MoveCreaturesAction());
-
-        simulation.init();
+        Simulation simulation = new Simulation.Builder(worldMap, renderer)
+                .addInitAction(new InitPopulateAction())
+                .addTurnAction(new EnsureMinimumSpawnsAction())
+                .addTurnAction(new MoveCreaturesAction())
+                .build();
 
         boolean continuous = false;
         Thread simulationThread = null;
