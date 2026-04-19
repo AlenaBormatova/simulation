@@ -1,5 +1,5 @@
-import actions.EnsureMinimumSpawnsAction;
 import actions.InitPopulateAction;
+import actions.MaintainPopulationAction;
 import actions.MoveCreaturesAction;
 import render.ConsoleRenderer;
 import render.EmojiGlyphSet;
@@ -26,7 +26,7 @@ public final class Main {
         ConsoleRenderer renderer = new ConsoleRenderer("⬛", new EmojiGlyphSet());
         Simulation simulation = new Simulation.Builder(worldMap, renderer)
                 .addInitAction(new InitPopulateAction())
-                .addTurnAction(new EnsureMinimumSpawnsAction())
+                .addTurnAction(new MaintainPopulationAction())
                 .addTurnAction(new MoveCreaturesAction())
                 .build();
 
